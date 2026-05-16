@@ -9,7 +9,7 @@
 |:----|:----|
 | `memory/skills/` | 量化交易技能参考文件 (dark-spark-plan, bot-lifecycle, funding-arb) |
 | `memory/backtest/` | 回测结果JSON (bt_v2_results, free_choice, leveraged等) |
-| `memory/dark_spark_capital_arch_*.md` | 树状架构基准文档 |
+| `dark_spark_capital_arch_20260516.md` | 🆕 v5.0 全月整合(7策略+机构对比+May审计) |
 
 ## 核心策略（7个虚拟盘）
 
