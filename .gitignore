@@ -1,0 +1,40 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.so
+*.egg-info/
+dist/
+build/
+
+# Logs — too large for git
+*.log
+bot_logs/
+analysis/*.json
+
+# Data — generated, not source
+ds0_data.json
+ds0_status.json
+trade_count.json
+*.json.gz
+
+# Secrets — NEVER COMMIT
+credentials.enc
+.env
+.enc_key
+.key
+*_key*.json
+*_creds*.json
+
+# Temp files
+/tmp/
+*.bak
+*.bak.*
+__pycache__/
+
+# Node modules (if any)
+node_modules/
+
+# OS files
+.DS_Store
+Thumbs.db
