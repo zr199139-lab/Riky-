@@ -105,40 +105,35 @@ def gpt_evolve(data):
 - 熊市做空赚钱, 做多亏钱
 - 主流币(BTC/ETH/SOL/DOGE)有流动性, 小币一买就套
 
-你的任务: 分析所有数据, 为4个策略生成最优参数。
+|你的任务: 分析所有数据, 为4个虚拟盘和$250现货执行器生成最优参数。
 不要保守。有信号就干, 没信号就等。
 要赌就赌大的, 但不赌就是最稳的赚。
+美国时间周一到周五波动最大。
 
-只输出JSON, 不要markdown包裹:
-{{{{
-  "market": "bullish/bearish/sideways(一句话理由)",
+$250现货执行器说明:
+- 资金: $250 USDT 币安现货账户
+- 选币: ETH/DOGE/SOL 三个主流币
+- 策略: 挂限价单等深度回调(低于现价8-15%), 等明显反弹再出
+- 不是网格, 低频, 每单目标赚$10-25
+- 空仓时可挂2-3个限价单等触发
+- 持仓后等反弹到目标出, 然后重新挂单
+
+输出JSON格式(新增spot_execution段):
+{{{{"market": "bullish/bearish/sideways(一句话理由)",
   "strategies": {{{{
-    "meanrevert_paper": {{{{
-      "active": true/false,
-      "rsi_oversold": 整数,
-      "rsi_overbought": 整数,
-      "position_pct": 浮点数0-1.0,
-      "action": "hold/open/close"
-    }}}},
-    "rsi_meanrev_paper": {{{{
-      "active": true/false,
-      "rsi_oversold": 整数,
-      "rsi_overbought": 整数,
-      "position_pct": 浮点数0-1.0,
-      "action": "hold/open/close"
-    }}}},
-    "combo31_paper": {{{{
-      "active": true/false,
-      "leverage": 整数1-20,
-      "position_pct": 浮点数0-1.0,
-      "action": "hold/open/close"
-    }}}},
-    "futures_paper": {{{{
-      "active": true/false,
-      "leverage": 整数1-20,
-      "position_pct": 浮点数0-1.0,
-      "action": "hold/open/close"
-    }}}}
+    "meanrevert_paper": {{{{"active": true/false,"rsi_oversold": 整数,"rsi_overbought": 整数,"position_pct": 浮点数,"action": "hold/open/close"}}}},
+    "rsi_meanrev_paper": {{{{"active": true/false,"rsi_oversold": 整数,"rsi_overbought": 整数,"position_pct": 浮点数,"action": "hold/open/close"}}}},
+    "combo31_paper": {{{{"active": true/false,"leverage": 整数,"position_pct": 浮点数,"action": "hold/open/close"}}}},
+    "futures_paper": {{{{"active": true/false,"leverage": 整数,"position_pct": 浮点数,"action": "hold/open/close"}}}}
+  }}}},
+  "spot_execution": {{{{
+    "active": true/false,
+    "budget_usdt": 250,
+    "orders": [
+      {{{{ "symbol": "ETH/USDT", "buy_below": 价格, "sell_at": 价格, "allocation": USDT数额 }}}},
+      {{{{ "symbol": "DOGE/USDT", "buy_below": 价格, "sell_at": 价格, "allocation": USDT数额 }}}},
+      {{{{ "symbol": "SOL/USDT", "buy_below": 价格, "sell_at": 价格, "allocation": USDT数额 }}}}
+    ]
   }}}},
   "risk": {{{{
     "daily_loss_limit": 浮点数,
@@ -187,6 +182,7 @@ def apply_decision(decision):
             'urgent_advice': decision.get('risk', {}).get('advice', ''),
         },
         'strategies': decision.get('strategies', {}),
+        'spot_execution': decision.get('spot_execution', {}),
         'version': 3
     }
     json.dump(config, open(LOGS / 'shared_config.json', 'w'), indent=2)

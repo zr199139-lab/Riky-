@@ -13,5 +13,7 @@
 ,
 {"signal": "idle", "source": "rsi_meanrev_paper", "value": 0, "desc": "0交易0盈亏"}
 ,
+{"signal": "idle", "source": "spot_executor", "value": 0, "desc": "0交易0盈亏"}
+,
 {"signal": "idle", "source": "turtle_paper", "value": 0, "desc": "0交易0盈亏"}
 ]
