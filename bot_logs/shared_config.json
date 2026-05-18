@@ -1,12 +1,12 @@
 {
-  "updated_at": "2026-05-18T22:45:50",
-  "market_assessment": "bearish intensifying at 22:45: BTC $76,412(-2.09%) dropped $199 in 15min from $76,611 - accelerating toward $76K support with no bounce structure. BCH $367.40(-10.78%) crash bounce from $348 to $377 at 22:00 fully faded, now $367.40 - the 17.5% daily range means -10.78% is still mid-range, $348 retest imminent. DOGE $0.10405(-6.14%) continues as leading weakness indicator. ETH $2,109(-3.53%) rolling lower from $2,148 fade. SOL $83.91(-2.81%) tracking BTC. XRP $1.3747(-2.69%). BTC volume elevated - weekend distribution accelerating into Sunday night. No reversal candle on any pair in 15min timeframe. BCH crash-bounce-fade-retest pattern accelerating. BTC $76K break likely within hours - would trigger cascade to $75K and 5-10% alt selloff.",
+  "updated_at": "2026-05-18T23:18:00",
+  "market_assessment": "bearish cascade continuing at 23:18. BTC $76,186(-2.26%) testing $76K support for 45min - grinding slowly, no bounce, no breakdown. BCH $369.64(-10.38%) crash bounce faded, still dangerous. DOGE $0.104(-6.09%) weakest. ETH $2,103(-3.77%) grinding toward $2,091. SOL $83.95(-2.75%). Volume declining - distribution slowing but still net negative. No reversal structure on any timeframe. BCH 17.5% daily range means ANY retrace could be $5-10 in minutes. BTC $76K is the last meaningful support before cascade to $75K.",
   "regime": "bearish",
   "risk_control": {
     "daily_loss_limit": 5.0,
     "max_positions": 0,
     "max_drawdown_per_position": 3.0,
-    "urgent_advice": "Bearish regime intensifying - BTC dropped $199 in 15min, no bounce on any pair. No live positions - correct. combo31 virtual BTC short profit grew to +$726 - tighten trail: 25% reduce at $76,600, full close at $76,900. BCH $367.40 breakdown below $360 imminent - will trigger paper short at 1x. DOGE -6.14% weakest coin. If BTC breaks $76K, aggressive cascade into $75K. Live futures wallet $46.75 insufficient for meaningful positions. Keep dry powder. No new live positions. BCH $360 breakdown + BTC $76K break would be the double trigger for cascade confirmation - prepare to short into it on paper strategies only.",
+    "urgent_advice": "EMERGENCY RESOLVED: All live positions closed at 23:17. BCH SHORT closed at -$6.32 loss (vs potential -$14.65 liquidation). BTC SHORT closed at +$0.58 profit. Wallet survived at $40.19. ROOT CAUSE: BCH 50x short with liquidation $371.85 on a coin with 17.5% daily range was a terminal design error. Stop_loss_multi.py had stop=$373.88 which is ABOVE liquidation $371.85 - so liquidation would trigger before stop. FIX REQUIRED: Add liquidation price check to stop_loss_multi.py. CRITICAL RULE: Never exceed 3x leverage on any coin with >8% daily range. BCH=17.5%→max 1x. No new live positions until infrastructure is hardened. Paper strategies remain bearish bias.",
     "funding_rate_alert": false,
     "long_short_ratio": "strongly bearish bias"
   },
@@ -17,7 +17,7 @@
       "position_pct": 0.0,
       "action": "wait",
       "stop_loss_atr": 1.5,
-      "reason": "$1,003.40 cash, +$3.40 PnL. Bearish momentum accelerating - BTC dropped $199 in 15min to $76,412. BCH crash retest accelerating. RSI oversold lowered from 20 to 18 to avoid catching knives as momentum accelerates. Wait mode correct - no change. Only enter if BTC shows a confirmed bounce structure (2 consecutive green 15min candles with volume)."
+      "reason": "$1,003.40 cash, +$3.40 PnL. Bearish grind continues no bounce structure. BTC at $76K without breakdown or bounce. RSI oversold=18 appropriate. Wait for (a) BTC $76K breakdown confirmation + follow-through OR (b) valid bounce structure (2 green 15min candles + expanding volume). No change."
     },
     "rsi_meanrev_paper": {
       "rsi_oversold": 13,
@@ -25,15 +25,15 @@
       "position_pct": 0.0,
       "action": "wait",
       "stop_loss_pct": 0.02,
-      "reason": "$995.51 cash, recovering from -$4.49 DOGE loss. DOGE -6.14% continues weakest - accelerating. RSI oversold lowered from 15 to 13 to avoid catching falling knives in cascade. Wait mode correct - no change."
+      "reason": "$995.51 cash, -$4.49 PnL. DOGE -6.09% leading weakness. RSI oversold=13 prevents catching knives. Wait strategy confirmed."
     },
     "combo31_paper": {
       "leverage": 1.5,
       "position_pct": 0.15,
       "action": "hold_trail",
-      "reason": "BTC SHORT@$77,138(cur $76,412, +$726 profit +9.41% on margin). Previous trail at $76,800 for 25% reduce is now only 0.25% above current price - BTC is accelerating down, any bounce to $76,600 would still protect $689 of profit. NEW TRAIL: Reduce 25% if BTC bounces above $76,600 (tightened from $76,800). Full close if BTC bounces above $76,900 (tightened from $77,200). If BTC breaks $76K, add 0.05x at $75,800 target $74K with $76,200 stop. ETH SHORT@$2,120(cur $2,109, +$11 PnL +4.15% margin). Tight next support $2,091. Hold. SOL SHORT@$85.06(cur $83.91, +$8.65 PnL +6.76% margin). Support $83.50 - hold. Net unrealized combo31: ~$745+. All shorts held, BTC trail tightened to protect $726 profit.",
+      "reason": "BTC SHORT@$77,138(cur $76,186, +$952 profit +11.9% on margin). BTC still grinding down. TRAIL: Reduce 25% if BTC bounces above $76,550. Full close if BTC bounces above $76,800. If BTC breaks $76,000, add 0.05x at $75,800 target $74,000 stop $76,200. ETH SHORT@$2,120(cur $2,103, +$17 PnL +10.6% margin). Hold. SOL SHORT@$85.06(cur $83.95, +$8.35 PnL +6.52% margin). Hold. Net combo31 unrealized: ~$977. All shorts profitable, trails tightened.",
       "btc_add_trigger": {
-        "price_below": 76200,
+        "price_below": 76000,
         "entry": 75800,
         "additional_qty_pct": 0.05,
         "target": 74000,
@@ -44,7 +44,7 @@
       "leverage": 1,
       "position_pct": 0.25,
       "action": "hold",
-      "reason": "ETH SHORT@$2,112.31, 0.947 ETH, margin $400. Current ETH $2,109 = +$3.12 unrealized (+0.78% - IMPROVING, now in profit for first time after recovering from -$16.69 low). ETH $2,091 support is now only $18 below - approaching fast. Downtrend intact. If ETH breaks $2,091, add 0.3x at $2,080 target $2,030, stop $2,105. If ETH bounces above $2,135, reduce 50% (tightened from $2,148 as momentum accelerates). Current trajectory: slow bleed toward $2,091, hold."
+      "reason": "ETH SHORT@$2,112.31, 0.947 ETH, margin $400. Current ETH $2,103 = +$8.82 unrealized (+2.2%). ETH drifting toward $2,091 support. Tighten: If ETH bounces above $2,128, reduce 50%. If ETH breaks $2,091, add 0.3x at $2,080 target $2,030 stop $2,105."
     }
   },
   "spot_execution": {
@@ -53,13 +53,13 @@
   },
   "contract": {
     "active": false,
-    "symbol": "BCH/USDT",
-    "direction": "short",
+    "symbol": "",
+    "direction": "none",
     "leverage": 1,
     "margin_usdt": 0,
-    "stop_loss_price": 382.0,
-    "take_profit_price": 348.0,
-    "reason": "BCH short setup updated at 22:45: BCH $367.40 after crash bounce fully failed ($414->$348->$377->$371->$367). Bounce at $377 completely failed, now accelerating to retest $348 low. Triggers: (1) If BTC breaks $76K and BCH is below $375 - ACTIVATED (BCH IS $367, BELOW $375). Waiting for BTC $76K break. (2) If BCH breaks below $360 with volume - activate 1x short with $382 stop, $348 target. Stop tightened from $385 to $382. Target still $348 initial, overshoot to $335 if BTC cascades. Leverage 1x. Margin 0 until trigger activates. Daily range 17.5% means even at 1x a 3% adverse move triggers stop loss - position sizing is the only protection."
+    "stop_loss_price": 0,
+    "take_profit_price": 0,
+    "reason": "ALL CONTRACT TRADING PAUSED. BCH 50x near-liquidation incident at 23:17 cost -$6.32. stop_loss_multi.py had stop ABOVE liquidation price. Root cause analysis recorded. Will resume only after (a) stop_loss_multi.py fixed with liq price check, (b) max leverage rule enforced per coin volatility, (c) contract_executor daemon running again. ETA: next decision cycle."
   },
-  "version": 17
+  "version": 19
 }

@@ -81,6 +81,20 @@ def close_position(sym, side, ps, qty):
         'newOrderRespType': 'RESULT'
     })
 
+def get_liquidation_price(sym):
+    """获取清算价"""
+    try:
+        r = requests.get(f'https://fapi.binance.com/fapi/v2/positionRisk',
+            params={'symbol': sym})
+        if r.status_code == 200:
+            for p in r.json():
+                if p.get('symbol') == sym:
+                    liq = p.get('liquidationPrice', '0')
+                    return float(liq) if liq else None
+    except:
+        pass
+    return None
+
 def monitor_position(sym, cfg):
     trail_pct = DEFAULT_TRAIL_PCT
     extreme = None
@@ -98,6 +112,23 @@ def monitor_position(sym, cfg):
                     stop_price = entry * (1 + stop_dist / 100)
                 else:
                     stop_price = entry * (1 - stop_dist / 100)
+
+                # BUGFIX 2026-05-18: 确保止损价在清算价之前触发
+                liq = get_liquidation_price(sym)
+                if liq and liq > 0:
+                    if cfg['side'] == 'SELL':
+                        # Short: stop must be BELOW liquidation to trigger first
+                        if stop_price >= liq:
+                            old_stop = stop_price
+                            stop_price = liq * 0.998  # 0.2% below liquidation
+                            log_msg(f'[FIX] stop {old_stop:.2f} was >= liq {liq:.2f}, adjusted to {stop_price:.2f}')
+                    else:
+                        # Long: stop must be ABOVE liquidation
+                        if stop_price <= liq:
+                            old_stop = stop_price
+                            stop_price = liq * 1.002  # 0.2% above liquidation
+                            log_msg(f'[FIX] stop {old_stop:.2f} was <= liq {liq:.2f}, adjusted to {stop_price:.2f}')
+
                 last_recalc = now
                 log_msg(f'ATR={atr_pct:.2f}% stop_dist={stop_dist:.1f}% stop={stop_price:.6f}')
 

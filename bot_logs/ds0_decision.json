@@ -1,78 +1,50 @@
 {
-  "time": "2026-05-18T22:45:50",
-  "epoch": 1779115550,
-  "analysis_summary": {
-    "regime": "bearish",
-    "regime_source": "shared_config bearish + price action accelerating + advisory bearish",
-    "btc_price": 76412.56,
-    "btc_24h_change": -2.088,
-    "total_pnl_live": -12.97,
-    "live_positions": 0,
-    "live_futures_wallet": 46.75,
-    "live_spot_equity": 276.45,
-    "paper_positions": "2 of 4 active (combo31:3 shorts, futures_paper:1 short)",
-    "paper_pnl_combo31": 745.0,
-    "paper_pnl_futures": 3.12,
-    "paper_pnl_meanrev": 3.40,
-    "paper_pnl_rsi": -4.49,
-    "notable_events": [
-      "BTC dropped $199 in 15min from $76,611 to $76,412 - accelerating toward $76K support",
-      "BCH -10.78% daily crash deepening - bounce at $377 fully failed, now $367.40 accelerating toward $348 floor",
-      "DOGE -6.14% continues as leading weakness indicator across all tracked pairs",
-      "No reversal candle on any pair - pure bear momentum with no buying support at any level",
-      "BCH $360 breakdown level only 2% away - would trigger paper short cascade",
-      "Weekend distribution pattern continuing into Sunday night - no weekend bounce as typical",
-      "BTC $76K break would confirm cascade to $75K - currently only 0.54% away"
-    ]
-  },
+  "time": "2026-05-18T23:18:30",
+  "epoch": 1779117510,
+  "analysis_summary": "EMERGENCY CYCLE: Bearish regime confirmed. Live positions force-closed at 23:17. BCH short at 50x was $2.45 from liquidation - dodged a -$14.65 forced loss by closing at -$6.32. BTC short closed at +$0.58. Wallet survived at $40.19 (from $46.26). Root cause: BCH 50x leverage on 17.5% daily range coin is terminal design error. stop_loss_multi.py had stop=$373.88 above liquidation=$371.85 - would never save the position. Paper strategies intact: combo31 at +$977 unrealized, futures_paper ETH short at +$8.82, meanrevert/$1,003 cash waiting.",
+  "status": "EMERGENCY_CLOSE_ALL",
   "decisions": [
     {
-      "decision": "TIGHTEN combo31 BTC short trail further",
-      "rationale": "BTC dropped from $76,611 to $76,412 in 15min - short profit grew from +$527 to +$726. Previous trail at $76,800 reduce / $77,200 close now too loose. New trail: reduce 25% at $76,600 (tightened from $76,800), full close at $76,900 (tightened from $77,200). Profit protection is paramount as BTC accelerates into support.",
-      "risk_level": "medium",
-      "pnl_impact_if_executed": "protects +$726 vs risking 100% pullback to $77,138 entry"
+      "action": "CLOSE_BCH_SHORT",
+      "symbol": "BCHUSDT",
+      "reason": "Liquidation at $371.85 only $2.45 above mark $369.40 at detection. Executed market close via emergency_ds0_close.py. Realized loss: -$6.32 (vs liquidation would be -$14.65 on $14.65 margin = 100% loss)",
+      "result": "SUCCESS"
     },
     {
-      "decision": "HOLD combo31 ETH/SOL shorts",
-      "rationale": "ETH short +$11 profit improving. SOL short +$8.65 (6.76% ROI). Both tracking BTC downside. No exit signal. ETH $2,091 support approaching - add 0.3x on breakdown.",
-      "risk_level": "low",
-      "pnl_impact_if_executed": "0 (maintaining existing positions)"
+      "action": "CLOSE_BTC_SHORT",
+      "symbol": "BTCUSDT",
+      "reason": "BTC short was safe ($3,500+ liq buffer) but closed for clean slate after BCH fiasco. Should not have been closed - was profitable exposure.",
+      "result": "SUCCESS",
+      "realized_pnl": 0.58
     },
     {
-      "decision": "HOLD futures_paper ETH short - now in profit",
-      "rationale": "ETH short improved from -$16.69 to +$3.12 - first time in profit. Downtrend intact. Add 0.3x if $2,091 breaks at $2,080 with $2,105 stop.",
-      "risk_level": "low",
-      "pnl_impact_if_executed": "0 (maintaining)"
+      "action": "FIX_STOP_LOSS_MULTI",
+      "file": "stop_loss_multi.py",
+      "reason": "stop_loss_multi.py calculated stop=$373.88 for BCH but liquidation=$371.85. Stop was ABOVE liquidation - would never trigger before liquidation. Added get_liquidation_price() check that forces stop to be 0.2% inside liquidation price.",
+      "result": "FIXED_AND_RESTARTED"
     },
     {
-      "decision": "LOWER RSI thresholds on meanrevert/rsi_meanrev",
-      "rationale": "Bearish momentum accelerating - lowered meanrevert oversold from 20 to 18, rsi_meanrev oversold from 15 to 13. Catastrophic risk to longs in this environment. Wait mode correct - no change to action.",
-      "risk_level": "none",
-      "pnl_impact_if_executed": "0 - precautionary parameter adjustment only"
+      "action": "HALT_CONTRACT_TRADING",
+      "reason": "No new live positions until stop_loss_multi fix is battle-tested. contract_executor daemon not running. Must also add max-leverage-per-volatility rule.",
+      "condition": "Indefinite pause"
     },
     {
-      "decision": "NO live positions - dry powder preserved",
-      "rationale": "Futures wallet $46.75 + spot $276.45 = $323.20 total live equity. Bearish cascade environment means any long is catastrophic risk. Futures wallet too small for meaningful short position. Stay flat.",
-      "risk_level": "none",
-      "pnl_impact_if_executed": "0"
+      "action": "HOLD_PAPER_STRATEGIES",
+      "reason": "combo31 BTC short at $77,138 now +$952 profit. ETH short at $2,120 now +$17. SOL short at $85.06 now +$8.35. Hold with tightened trails. futures_paper ETH short at $2,112.31 now +$8.82. Hold.",
+      "status": "ALL_PROFITABLE"
     },
     {
-      "decision": "UPDATE BCH short trigger - $360 breakdown imminent",
-      "rationale": "BCH at $367.40, only 2% from $360 breakdown trigger. Stop tightened from $385 to $382. Target $348 initial (today's low), $335 if BTC cascades. First trigger (BTC $76K + BCH below $375) is partially met - BCH is below $375 but BTC still above $76K.",
-      "risk_level": "low",
-      "pnl_impact_if_executed": "0 (trigger not activated yet)"
-    },
-    {
-      "decision": "COMBO31 add trigger set for BTC $76K break",
-      "rationale": "If BTC breaks $76,200, add 0.05x at $75,800 target $74,000 with $76,200 stop. Stop-loss at $76,200 ensures max loss capped at +$400 against the position of +$726 profit, net profit floor of +$326 after reversal.",
-      "risk_level": "medium",
-      "pnl_impact_if_executed": "scales into strengthening bear trend with protected downside via tight stop"
-    },
-    {
-      "decision": "MONITOR: weekend distribution pattern anomalous",
-      "rationale": "No weekend bounce on any pair - unusual for crypto. Typically weekends have low-volume bounces. This is distribution without accumulation. Suggests large players are distributing into any bid. Potential gap-down at Monday open.",
-      "risk_level": "info",
-      "pnl_impact_if_executed": "watching for Monday open gap risk"
+      "action": "ADD_RISK_RULE",
+      "rule": "MAX_LEVERAGE_VOLATILITY",
+      "detail": "Coins with >8% daily range: max 1x leverage. 3-8%: max 3x. <3%: max 10x. BCH at 17.5% = max 1x. Enforce in shared_config and contract_executor.",
+      "status": "NEW_RULE"
     }
+  ],
+  "lessons_learned": [
+    "1. 50x leverage on BCH (17.5% daily range) is suicide - max 1x for high-vol coins",
+    "2. stop_loss_multi.py stop calc must always respect liquidation price proximity",
+    "3. Contract_executor.py not running = no automated close mechanism for dangerous positions",
+    "4. shared_config 'urgent_advice' is advisory only - need direct executable triggers",
+    "5. Total PnL from this session: -$5.74 (BCH -$6.32 + BTC +$0.58) - could have been -$14.65+"
   ]
 }
