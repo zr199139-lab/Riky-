@@ -54,6 +54,19 @@ def collect_data():
         except: pass
     data['strategies'] = strategies
     
+    # 当前市场价格（喂给GPT算买入/卖出价）
+    try:
+        import ccxt
+        ex = ccxt.binance({'enableRateLimit': True})
+        prices = {}
+        for sym in ['ETH/USDT', 'DOGE/USDT', 'SOL/USDT', 'BTC/USDT']:
+            try:
+                t = ex.fetch_ticker(sym)
+                prices[sym] = {'last': t['last'], 'high_24h': t['high'], 'low_24h': t['low'], 'change': t['percentage']}
+            except: pass
+        data['market_prices'] = prices
+    except: data['market_prices'] = {}
+    
     # 当前shared_config
     try:
         sc = json.load(open(LOGS / 'shared_config.json'))
@@ -97,6 +110,9 @@ def gpt_evolve(data):
 
 === 币安5月真实历史 ===
 {binance_summary}
+
+=== 当前市场价格(用于计算买入卖出价) ===
+{json.dumps(data.get('market_prices', {}), indent=2)}
 
 === 历史教训(喂给进化用) ===
 - 用户自己操作=赚钱(BTC+$92, AVNT+$20, RUNE+$17)
