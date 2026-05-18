@@ -1,62 +1,73 @@
 {
-  "time": "2026-05-18T22:00:30",
-  "epoch": 1779112830,
+  "time": "2026-05-18T22:15:30",
+  "epoch": 1779113730.0,
   "analysis_summary": {
     "regime": "bearish",
-    "regime_confidence": "high",
-    "total_pnl": -15.47,
-    "live_positions_count": 1,
-    "paper_strategies_active": 2,
-    "btc_price": 76910.56,
-    "btc_24h_change": -1.648,
-    "eth_price": 2129.59,
-    "eth_24h_change": -2.852
+    "btc_price": 76775.35,
+    "btc_24h_change": -1.522,
+    "total_pnl": -12.97,
+    "total_pnl_status": "loss",
+    "live_positions": 0,
+    "paper_positions": 2,
+    "combo31_unrealized_pnl": 361.66,
+    "futures_paper_unrealized_pnl": -13.73,
+    "market_verdict": "bearish confirmed - all 6 coins negative. BTC $76,775 double rejection at $78K = bear flag. ETH bounce $2,091->$2,148 fully faded. BCH extreme volatility 17.5%. DOGE weakest -5.68%. No reversal structure on any pair."
   },
-  "critical_findings": [
-    "🔴 LIVE ETH LONG @ 150x LEVERAGE $1.21 FROM LIQUIDATION - MUST CLOSE IMMEDIATELY",
-    "Previous config (v13) stated 'All real positions closed' but ETH LONG 0.729 ETH @ $2,132.71 still open - either undetected or reopened by rogue process",
-    "Liquidation price $2,128.07, current mark $2,129.28 - a 0.057% drop triggers liquidation",
-    "Position is LONG in a bearish regime - directionally wrong",
-    "Combo31 paper shorts net +$222.30 - bearish thesis validated"
-  ],
   "decisions": [
     {
-      "priority": "CRITICAL",
-      "action": "close_live_position",
-      "target": "ETH/USDT LONG @ 150x",
-      "reason": "$1.21 from liquidation at 150x leverage. Position opened against bearish regime. Preserve remaining $26.33 wallet + $10.74 available margin.",
-      "entry_price": 2132.71,
-      "current_upnl": -2.50,
-      "loss_if_closed": -2.50
+      "action": "regime_enforce",
+      "target": "system",
+      "detail": "Overwrite ds0_data 'sideways' label. Hard rule: when all 6 tracked coins are negative across >2% average, regime MUST be bearish. Bear flag confirmed at BTC $78K double rejection."
     },
     {
-      "priority": "high",
-      "action": "maintain_paper_shorts",
-      "target": "combo31_paper + futures_paper",
-      "reason": "Combo31 BTC/ETH/SOL shorts net profitable. Futures_paper ETH short underwater but bounce fading. Downtrend intact. Hold all.",
-      "details": "combo31: hold BTC short @ $77,138, ETH short @ $2,120, SOL short @ $85.06. futures_paper: hold ETH short @ $2,112.31"
+      "action": "hold",
+      "target": "combo31_paper",
+      "reason": "3-leg combo short at +$361.66 unrealized. BTC short at +$363 profit. SOL short at +$4.66. ETH short at -$6 loss but improving as bounce fades. All 3 legs aligned with bearish regime."
     },
     {
-      "priority": "medium",
-      "action": "maintain_wait",
-      "target": "meanrevert_paper + rsi_meanrev_paper",
-      "reason": "Bearish regime - no mean reversion longs. RSI thresholds tightened. Continue wait mode.",
-      "details": "meanrevert: RSI oversold 20, position_pct 0. rsi_meanrev: RSI oversold 15, position_pct 0."
+      "action": "hold",
+      "target": "futures_paper_eth_short",
+      "reason": "ETH SHORT @ $2,112.31. Loss improving from -$16.69 to -$13.73 as ETH drops. Bounce to $2,148 fully faded. Bearish regime supports continued hold."
     },
     {
-      "priority": "low",
-      "action": "monitor_bch_short_setup",
-      "target": "BCH/USDT",
-      "reason": "BCH $377 after $414->$348 crash. Bounce fading. Waiting for rejection at $378-382 or breakdown below $360.",
-      "details": "Entry triggers: bearish rejection @ $378-382 or breakdown below $360. Stop $390, TP $340."
+      "action": "trailing_stop",
+      "target": "combo31_btc_short",
+      "detail": "If BTC bounces above $77,000, reduce 25% to lock profit. Current BTC $76,775 - not yet triggered."
     },
     {
-      "priority": "info",
-      "action": "regime_correction",
-      "target": "ds0_data regime field",
-      "reason": "ds0_data.json reports regime='sideways' but all 6 coins negative, BTC rejected at $78K, BCH -8.7%, DOGE -5.9%. Correct assessment is 'bearish'. Data classifier needs tuning.",
-      "details": "Force regime to 'bearish' in shared_config."
+      "action": "add",
+      "target": "combo31_paper",
+      "detail": "If BTC breaks below $76,000, consider adding 0.05x at $75,800 for trend continuation entry."
+    },
+    {
+      "action": "no_new_live",
+      "target": "all_live_strategies",
+      "detail": "max_positions=0 maintained. No live positions until manual review. Bearish regime not suitable for new live entries without confirmation."
+    },
+    {
+      "action": "wait",
+      "target": "bch_short_setup",
+      "detail": "BCH $376 still fading from $377 bounce. Entry triggers: rejection at $378-382 or breakdown below $360. Not yet triggered."
+    },
+    {
+      "action": "wait",
+      "target": "meanrevert_paper",
+      "detail": "RSI oversold 20. position_pct 0.0. Bearish regime prevents long entry. No support structure to long against."
+    },
+    {
+      "action": "wait",
+      "target": "rsi_meanrev_paper",
+      "detail": "RSI oversold 15. position_pct 0.0. DOGE -5.68% weakest coin. Any long is catching a falling knife."
+    },
+    {
+      "action": "inactive",
+      "target": "spot_execution",
+      "detail": "No spot buys in bear market. USDT $30.01 preserved."
+    },
+    {
+      "action": "inactive",
+      "target": "contract_live",
+      "detail": "BCH short setup not triggered. margin_usdt=0. Leverage 2x ready but waiting for confirmation candle."
     }
-  ],
-  "advisory_note": "Advisory at 19:16 says '空头趋势明显' (bearish trend obvious). Intel file empty - no new intelligence data. Whale/intel analysis: N/A (no intel data available)."
+  ]
 }

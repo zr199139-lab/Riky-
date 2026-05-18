@@ -1,12 +1,12 @@
 {
-  "updated_at": "2026-05-18T22:00:30",
-  "market_assessment": "bearish confirmed at 22:00: All 6 coins negative. BTC $76,910(-1.65%) holding below $77K after $78K rejection - lower high at $78K confirmed bearish. ETH $2,129(-2.85%) bounced $2,091->$2,148 now fading to $2,129 - short-covering bounce exhausted, rolling over. BCH $377(-8.71%) crashed $414->$348 low, bounced to $377, now fading again. 17.5% daily range - extreme volatility, potential for another leg down. DOGE $0.105(-5.94%) weakest coin, accelerating. SOL $84.62(-2.06%) relatively resilient but still negative. XRP $1.385(-2.35%). BTC structure: double rejection at $78K = bear flag confirmed. Volume BTC: 14,293 BTC - elevated for weekend. Downside momentum intact. No reversal structure on any tracked pair.",
+  "updated_at": "2026-05-18T22:15:30",
+  "market_assessment": "bearish confirmed at 22:15: All 6 coins negative 15min later. BTC $76,775(-1.52%) sliding below $77K - no bounce strength. Double rejection at $78K fully confirmed as bear flag. ETH $2,126(-2.62%) buzhuo $2,091->$2,148 bounce fully faded, now $2,126 - short-covering exhaustion confirmed, rolling lower. BCH $376(-8.69%) post-crash bounce from $348 to $377 now fading to $376 - bounce sellers stepping in. DOGE $0.1047(-5.68%) weakest coin continues accelerating. SOL $84.44(-2.01%) tracking BTC. XRP $1.381(-2.33%). BTC volume elevated weekend distribution. No reversal candle on any pair. Downside momentum intact - next support BTC $76K, then $75K.",
   "regime": "bearish",
   "risk_control": {
     "daily_loss_limit": 5.0,
     "max_positions": 0,
     "max_drawdown_per_position": 3.0,
-    "urgent_advice": "🔴 CRITICAL: Live ETH LONG @ 150x at $2,132.71, liquidation $2,128.07 - only $1.21 from liquidation! Current ETH $2,129.59. This position is AGAINST the bearish regime and in extreme danger. MUST CLOSE IMMEDIATELY. This may have been opened by a rogue process after the 21:45 config set max_positions=0. After close: wallet ~$27.50 available. No new live positions until manual review. BCH short setup still pending: bounce fading at $377, rejection at $378-382 or breakdown below $360 needed for entry. DOGE -5.94% lead indicator for market weakness."
+    "urgent_advice": "Bearish regime enforced. No live positions - correct. All paper shorts holding profit on BTC/SOL. ETH paper short at slight loss but improving as bounce fades. BCH short setup still pending: $376 fading from $377 bounce. Entry triggers: (1) Bearish rejection candle at $378-382, (2) Breakdown below $360. DOGE -5.68% weakest coin confirmed - leading market weakness indicator. Watch for potential cascade if BTC breaks $76K. No new live positions until manual review."
   },
   "strategies": {
     "meanrevert_paper": {
@@ -15,7 +15,7 @@
       "position_pct": 0.0,
       "action": "wait",
       "stop_loss_atr": 1.5,
-      "reason": "$1,003.40 cash, +$3.40 PnL. Bearish regime continues. RSI oversold at 20 prevents catching falling knives. BTC $76,910 no support structure established. Wait mode correct."
+      "reason": "$1,003.40 cash, +$3.40 PnL. Bearish regime continues with momentum. RSI oversold at 20 prevents catching falling knives. BTC $76,775 no support structure. BCH extreme 17.5% daily range means mean-reversion has asymmetric risk to downside. Wait mode correct."
     },
     "rsi_meanrev_paper": {
       "rsi_oversold": 15,
@@ -23,19 +23,19 @@
       "position_pct": 0.0,
       "action": "wait",
       "stop_loss_pct": 0.02,
-      "reason": "$995.51 cash, recovering from -$4.49 DOGE loss. DOGE -5.94% weakest coin. RSI oversold at 15 prevents re-entry in bearish trend. Wait mode correct."
+      "reason": "$995.51 cash, recovering from -$4.49 DOGE loss. DOGE -5.68% continues weakest. RSI oversold at 15 prevents re-entry. Any long in this environment is catching a falling knife with a butter knife. Wait mode correct."
     },
     "combo31_paper": {
       "leverage": 1.5,
       "position_pct": 0.15,
       "action": "hold",
-      "reason": "BTC SHORT@$77,138(cur $76,910, +$228 profit +0.30% margin). ETH SHORT@$2,120(cur $2,129, -$9 PnL -0.56%). SOL SHORT@$85.06(cur $84.62, +$3.30 profit +2.58%). Net: approximately +$222.30 on 3-leg combo. BTC broke $77K and holding - bearish momentum intact. ETH bounce from $2,091 to $2,148 fully faded back to $2,129 - short covering exhausted. SOL trending down with market. Hold all shorts. Consider trailing stop on BTC at $77,500 if BTC bounces back above $77K."
+      "reason": "BTC SHORT@$77,138(cur $76,775, +$363 profit +0.47% margin). ETH SHORT@$2,120(cur $2,126, -$6 PnL -0.38%). SOL SHORT@$85.06(cur $84.44, +$4.66 profit +3.64%). Net unrealized: +$361.66 on 3-leg combo. BTC broke $77K now holding - bearish momentum intact. ETH bounce from $2,091 to $2,148 fully faded to $2,126 - short covering exhausted, rolling over. SOL tracking BTC down. Hold all shorts. Trailing stop on BTC at $77,500: if BTC bounces above $77K, reduce 25% to lock profit. If BTC breaks $76K, consider adding 0.05x at $75,800."
     },
     "futures_paper": {
       "leverage": 1,
       "position_pct": 0.25,
       "action": "hold",
-      "reason": "ETH SHORT@$2,112.31, 0.947 ETH, margin $400. Current ETH $2,129 = -$16.69 unrealized loss(-1.18%). ETH bouncing from $2,091 short-covering exhausting, fading from $2,148. Downtrend intact. BTC bearish macro confirmed. Hold. If ETH drops below $2,091 support, add 0.3x position at $2,080 target. If ETH breaks $2,148, reduce 50% and set stop at $2,160."
+      "reason": "ETH SHORT@$2,112.31, 0.947 ETH, margin $400. Current ETH $2,126 = -$13.73 unrealized(-1.18% but improving from -$16.69 at 22:00). ETH $2,091 support held bounce to $2,148 fully faded to $2,126. Downtrend intact. BTC bearish macro confirmed. Hold. If ETH breaks below $2,091, add 0.3x at $2,080 target. If ETH breaks above $2,148, reduce 50% and set stop at $2,160."
     }
   },
   "spot_execution": {
@@ -50,7 +50,7 @@
     "margin_usdt": 0,
     "stop_loss_price": 390.0,
     "take_profit_price": 340.0,
-    "reason": "BCH short setup pending: $377.3 after $414->$348 crash. Bounce to $377 fading. Volume 114K - still elevated distribution pattern. Wait for (1) Bearish rejection candle at $378-382, or (2) Breakdown below $360. Do NOT chase - 17.5% daily range means stop-loss risk is high without confirmation candle."
+    "reason": "BCH short setup still pending: $376 after $414->$348 crash. Bounce to $377 fading to $376. Volume 115K - distribution pattern continuing. Wait for confirmation: (1) Bearish rejection candle at $378-382, or (2) Breakdown below $360. 17.5% daily range means stop-loss risk is high without confirmation candle. Do NOT chase - let setup come to us."
   },
-  "version": 14
+  "version": 15
 }
