@@ -1,16 +1,11 @@
 #!/usr/bin/env python3
 """
-暗黑星火 · 主权交易引擎 V1
-============================
-全自主决策闭环——不看人不问人，自分析自开枪自复盘。
+暗黑星火 · 虚拟盘交易引擎 V1
+==============================
+与主权交易引擎完全同架构，但用虚拟资金模拟交易。
+无交易次数限制，$10,000起始资金，专门为市场周期转换收集数据。
 
-运行模式：
-- cron每30分钟触发一次检查
-- 有持仓时检查止盈/加仓/减仓，无持仓时扫描机会
-- 所有决策走AI分析+5关自检，通过直接下单
-- 极端行情止损由 stop_loss_multi.py（WebSocket毫秒级）负责
-
-不输出废话日志，只记录行动和结果。
+牛市来临时，虚拟盘已经跑出验证过的策略参数，直接搬上实盘。
 """
 
 import os, sys, json, time, hashlib, hmac, urllib.request, urllib.error
@@ -19,26 +14,35 @@ from pathlib import Path
 
 # ── 路径 ──
 BASE = Path('/home/admin/charon')
-LOG_FILE = BASE / 'bot_logs' / 'sovereign_trader.log'
-STATE_FILE = BASE / 'bot_logs' / 'sovereign_state.json'
-sys.path.append('/home/admin/.hermes/mempalace/secure')
-from decrypt_and_run import decrypt as _decrypt
-
-# ── 凭据 ──
-_CREDS = _decrypt()
-BINANCE_KEY = _CREDS['BINANCE_API_KEY']
-BINANCE_SECRET = _CREDS['BINANCE_API_SECRET']
+LOG_FILE = BASE / 'bot_logs' / 'paper_spot_trader.log'
+STATE_FILE = BASE / 'bot_logs' / 'paper_spot_state.json'
+# 虚拟盘不实际调用交易所，但需要K线数据
+BINANCE_KEY = ''
+BINANCE_SECRET = ''
 AIPRO_KEY = "sk-BLzmIrUAOsZOpwUPf1IuILbxnyaq0bitkntL3aHiEIO29mtL"
 DS_KEY = "sk-1c97d4d658704f9cae7f998eb8fdb43b"
 
-# ── 参数（daily_retro会覆写这些）──
-MAX_LEVERAGE = 5               # 默认5x，按币种动态调整
-MARGIN_PER_TRADE = 30          # 每单固定保证金$30（不按百分比）
-DEFAULT_STOP_PCT = 5.0         # 默认止损5%，给趋势验证留空间
-MAX_POSITIONS = 3              # 最多同时3仓
-DAILY_LOSS_LIMIT = -15.0       # 日亏$15熔断
-DAILY_TRADE_LIMIT = 3            # 每日最多3笔实盘交易
-MIN_TRADE_INTERVAL = 1800      # 同一币种最小交易间隔30分钟
+# ── 参数 ──
+MAX_LEVERAGE = 1               # 现货=无杠杆
+MARGIN_PER_TRADE = 500         # 每单$500（现货不用保证金概念）
+DEFAULT_STOP_PCT = 99.0        # 现货不止损
+MAX_POSITIONS = 5              # 最多同时持5币
+DAILY_LOSS_LIMIT = -9999.0     # 不设日亏熔断
+MIN_TRADE_INTERVAL = 60        # 1分钟间隔
+
+# 虚拟盘初始资金
+PAPER_CAPITAL = 10000.0
+
+# ── 现货虚拟盘状态 ──
+PAPER_STATE = {
+    'cash': PAPER_CAPITAL,
+    'positions': {},    # sym -> {side, qty, entry, mark}
+    'trades': 0,
+    'total_pnl': 0.0,
+    'total_fees': 0.0,
+    'started_at': datetime.now().isoformat(),
+    'last_trade_time': 0,
+}
 
 # ── Jane Street级别动态杠杆矩阵 ──
 LEVERAGE_MATRIX = {
@@ -86,35 +90,18 @@ def log(msg):
         f.write(f'[{t}] {msg}\n')
     print(f'[{t}] {msg}', flush=True)
 
-def _sign(params, secret):
-    qs = '&'.join(f'{k}={v}' for k, v in sorted(params.items()))
-    return hmac.new(secret.encode(), qs.encode(), hashlib.sha256).hexdigest()
-
-def _api(method, path, params=None, signed=False, use_spot=False):
+def _api(method, path, params=None, use_spot=False):
     base = 'https://api.binance.com' if use_spot else 'https://fapi.binance.com'
     url = f'{base}{path}'
-    headers = {'X-MBX-APIKEY': BINANCE_KEY}
-    if signed:
-        params = params or {}
-        params['timestamp'] = int(time.time() * 1000)
-        params['recvWindow'] = 10000
-        qs = '&'.join(f'{k}={v}' for k, v in sorted(params.items()))
-        sig = hmac.new(BINANCE_SECRET.encode(), qs.encode(), hashlib.sha256).hexdigest()
-        url = f'{url}?{qs}&signature={sig}'
-    elif params:
+    headers = {}
+    if params:
         qs = '&'.join(f'{k}={v}' for k, v in params.items())
         url = f'{url}?{qs}'
     
     try:
-        if method == 'GET':
-            r = urllib.request.Request(url, headers=headers)
-            with urllib.request.urlopen(r, timeout=10) as resp:
-                return json.loads(resp.read())
-        elif method == 'POST':
-            # Binance accepts signed POST params in URL (empty body)
-            r = urllib.request.Request(url, data=b'', headers=headers)
-            with urllib.request.urlopen(r, timeout=10) as resp:
-                return json.loads(resp.read())
+        r = urllib.request.Request(url, headers=headers)
+        with urllib.request.urlopen(r, timeout=10) as resp:
+            return json.loads(resp.read())
     except urllib.error.HTTPError as e:
         err = e.read().decode()[:200]
         return {'error': f'HTTP {e.code}: {err}'}
@@ -123,12 +110,6 @@ def _api(method, path, params=None, signed=False, use_spot=False):
 
 def _public_get(path, params=None):
     return _api('GET', path, params)
-
-def _signed_get(path, params=None):
-    return _api('GET', path, params, signed=True)
-
-def _signed_post(path, params):
-    return _api('POST', path, params, signed=True)
 
 def _spot_get(path, params=None):
     return _api('GET', path, params, use_spot=True)
@@ -166,39 +147,31 @@ def _ai_call(model, messages, max_tokens=1024, temp=0.3):
 
 # ── 市场数据采集 ──
 def get_market_state():
-    """获取当前市场数据"""
+    """获取当前市场数据（公开API版本，不需要API Key）"""
     # 现货BTC价格和趋势
     btc = _spot_get('/api/v3/ticker/24hr', {'symbol': 'BTCUSDT'})
+    if not btc or 'lastPrice' not in btc:
+        log('  无法获取BTC价格，跳过')
+        return None
     btc_price = float(btc.get('lastPrice', 0))
     btc_change = float(btc.get('priceChangePercent', 0))
     
-    # 合约账户
-    acct = _signed_get('/fapi/v2/account')
-    if 'error' in acct:
-        log(f'  账户API错误: {acct["error"]}')
-        return None
-    wallet = float(acct.get('totalWalletBalance', 0))
-    equity = float(acct.get('totalEquity', wallet)) if acct.get('totalEquity') is not None else wallet
-    upnl = float(acct.get('totalUnrealizedProfit', 0))
-    available = float(acct.get('availableBalance', 0))
-    
-    # 当前持仓
-    positions = []
-    for p in acct.get('positions', []):
-        amt = float(p.get('positionAmt', 0))
-        if abs(amt) < 0.001:
-            continue
-        positions.append({
-            'symbol': p['symbol'].replace('USDT', '/USDT'),
-            'side': 'LONG' if amt > 0 else 'SHORT',
-            'qty': abs(amt),
-            'entry': float(p.get('entryPrice', 0)),
-            'mark': float(p.get('markPrice', 0)),
-            'pnl': float(p.get('unRealizedProfit', 0)),
-            'margin': float(p.get('initialMargin', 0)),
-            'liq': float(p.get('liquidationPrice', 0)),
-            'leverage': float(p.get('leverage', 5)),
-            'ps': p.get('positionSide', 'BOTH'),
+    # 虚拟盘用本地状态替代合约账户
+    load_paper_state()
+    equity = PAPER_STATE['cash'] + sum(p.get('upnl', 0) for p in PAPER_STATE['positions'].values())
+    available = PAPER_STATE['cash']
+    positions_list = []
+    for sym, p in PAPER_STATE['positions'].items():
+        positions_list.append({
+            'symbol': sym,
+            'side': p['side'],
+            'qty': p['qty'],
+            'entry': p['entry'],
+            'mark': p.get('mark', p['entry']),
+            'pnl': p.get('upnl', 0),
+            'margin': p['margin'],
+            'leverage': p.get('leverage', 5),
+            'ps': 'BOTH',
         })
     
     # Fear & Greed
@@ -209,7 +182,7 @@ def get_market_state():
     except:
         fear_greed = 50
     
-    # 涨幅榜（24h top movers）
+    # 涨幅榜
     tickers = _spot_get('/api/v3/ticker/24hr')
     top_movers = []
     if isinstance(tickers, list):
@@ -225,57 +198,18 @@ def get_market_state():
             'volume': float(t['volume']),
         } for t in sorted_tickers]
     
-    # 日盈亏统计（链上真实）
-    daily_pnl = _calc_daily_pnl(positions, wallet)
-    
     return {
         'btc_price': btc_price,
         'btc_change_24h': btc_change,
-        'wallet': wallet,
+        'wallet': equity,       # 虚拟盘用权益
         'equity': equity,
-        'unrealized_pnl': upnl,
-        'available': available,
-        'positions': positions,
+        'unrealized_pnl': sum(p.get('upnl', 0) for p in PAPER_STATE['positions'].values()),
+        'available': available, # 虚拟盘用可用现金
+        'positions': positions_list,
         'fear_greed': fear_greed,
         'top_movers': top_movers[:10],
-        'daily_pnl': daily_pnl,
+        'daily_pnl': 0.0,       # 虚拟盘不跟踪日盈亏
     }
-
-def _calc_daily_pnl(positions, wallet):
-    """估算日内盈亏"""
-    state = {}
-    if STATE_FILE.exists():
-        try:
-            state = json.loads(STATE_FILE.read_text())
-        except:
-            pass
-    prev_wallet = state.get('prev_wallet', wallet)
-    return wallet - prev_wallet
-
-def save_state(market, track_trade=False):
-    today = datetime.now().strftime('%Y-%m-%d')
-    state = {
-        'prev_wallet': market['wallet'],
-        'prev_equity': market['equity'],
-        'last_check': datetime.now().isoformat(),
-    }
-    if track_trade:
-        # 读取现有状态获取历史交易计数
-        old_state = {}
-        if STATE_FILE.exists():
-            try:
-                old_state = json.loads(STATE_FILE.read_text())
-            except:
-                pass
-        trade_date = old_state.get('trade_date', '')
-        trade_count = old_state.get('trade_count', 0)
-        if trade_date == today:
-            state['trade_count'] = trade_count + 1
-        else:
-            state['trade_count'] = 1
-        state['trade_date'] = today
-        state['last_trade_time'] = time.time()
-    STATE_FILE.write_text(json.dumps(state))
 
 # ── AI分析引擎 ──
 def analyze_market(market):
@@ -377,115 +311,135 @@ def check_five_gates(signal, market):
     all_pass = all(checks.values())
     return all_pass, checks
 
-# ── 执行引擎 ──
-def execute_trade(signal, market):
-    """直接开枪——开仓/平仓"""
+# ── 虚拟盘持仓管理 ──
+def load_paper_state():
+    """从文件加载虚拟盘状态"""
+    global PAPER_STATE
+    if STATE_FILE.exists():
+        try:
+            saved = json.loads(STATE_FILE.read_text())
+            PAPER_STATE.update(saved)
+        except:
+            pass
+
+def save_paper_state():
+    """持久化虚拟盘状态"""
+    STATE_FILE.write_text(json.dumps(PAPER_STATE, indent=2))
+
+def paper_execute(signal, market):
+    """现货虚拟执行——只用现金买币，无杠杆，不止损"""
+    global PAPER_STATE
+    load_paper_state()
+    
     decision = signal.get('decision', 'HOLD')
     
     if decision == 'HOLD':
-        log(f'HOLD | {signal.get("reason","无信号")}')
+        # 更新持仓市值
+        total_equity = PAPER_STATE['cash']
+        for sym, pos in list(PAPER_STATE['positions'].items()):
+            try:
+                ticker = _public_get('/fapi/v1/ticker/price', {'symbol': sym})
+                mark = float(ticker['price'])
+                pos['mark'] = mark
+                pos['upnl'] = (mark - pos['entry']) * pos['qty']
+            except:
+                pass
+            total_equity += pos['qty'] * pos.get('mark', pos['entry'])
+        
+        log(f'[SPOT] HOLD | 权益=${total_equity:.2f} | 现金=${PAPER_STATE["cash"]:.2f} | 持仓={len(PAPER_STATE["positions"])}')
+        save_paper_state()
         return
     
     if decision == 'CLOSE_ALL':
-        for pos in market['positions']:
-            sym = pos['symbol'].replace('/USDT', 'USDT')
-            side = 'BUY' if pos['side'] == 'SHORT' else 'SELL'
-            ps = pos.get('ps', 'BOTH')
-            result = _signed_post('/fapi/v1/order', {
-                'symbol': sym,
-                'side': side,
-                'type': 'MARKET',
-                'quantity': pos['qty'],
-                'positionSide': ps,
-                'newOrderRespType': 'RESULT'
-            })
-            if 'orderId' in result:
-                log(f'CLOSE {pos["symbol"]} @${pos["mark"]:.2f} PnL={pos["pnl"]:+.2f}')
-            else:
-                log(f'CLOSE_FAIL {pos["symbol"]}: {result.get("msg","?")}')
+        for sym, pos in list(PAPER_STATE['positions'].items()):
+            try:
+                ticker = _public_get('/fapi/v1/ticker/price', {'symbol': sym})
+                mark = float(ticker['price'])
+            except:
+                mark = pos.get('mark', pos['entry'])
+            
+            pnl = (mark - pos['entry']) * pos['qty']
+            fee = pos['qty'] * mark * 0.001  # 0.1% taker sell fee
+            proceeds = pos['qty'] * mark - fee
+            PAPER_STATE['cash'] += proceeds
+            PAPER_STATE['total_pnl'] += pnl
+            PAPER_STATE['total_fees'] += fee
+            PAPER_STATE['trades'] += 1
+            
+            log(f'[SPOT] SELL {sym} {pos["qty"]:.4f}@${mark:.2f} PnL=${pnl:+.2f}')
+            del PAPER_STATE['positions'][sym]
+        
+        log(f'[SPOT] 全平 | 现金=${PAPER_STATE["cash"]:.2f} | 总PnL=${PAPER_STATE["total_pnl"]:.2f}')
+        save_paper_state()
         return
     
-    # 开仓
+    # 开仓（现货只能做多）
     symbol = signal.get('target_symbol', '')
     if not symbol:
-        log(f'NO_TARGET | {signal.get("reason","")}')
+        log(f'[SPOT] NO_TARGET')
+        save_paper_state()
         return
     
-    # 确定方向
-    is_long = decision == 'ENTER_LONG'
-    side = 'BUY' if is_long else 'SELL'
-    position_side = 'LONG' if is_long else 'SHORT'
+    position_side = signal.get('decision', '')
     
-    # 动态杠杆配置（基于标的物）
-    target_leverage, dynamic_stop = get_leverage_for_symbol(symbol)
-    leverage = min(target_leverage, signal.get('leverage', MAX_LEVERAGE))
-    leverage = max(1, int(leverage))  # 至少1x
-    
-    margin = min(MARGIN_PER_TRADE, market['available'] * 0.8)
-    
-    # 手续费防御检查
-    fee_ok, fee_msg = fee_check_passes(margin, leverage)
-    if not fee_ok:
-        log(f'FEE_REJECT {symbol}: {fee_msg} ({leverage}x/${margin:.0f})')
-        return
-    log(f'  动态杠杆: {leverage}x | 止损: {dynamic_stop}% | {fee_msg}')
-    
-    price = None
-    
-    # 获取当前价格
+    # 获取价格
     try:
         ticker = _public_get('/fapi/v1/ticker/price', {'symbol': symbol})
         price = float(ticker['price'])
     except:
-        price = None
-    
-    if not price or price <= 0:
-        log(f'NO_PRICE {symbol}')
+        log(f'[SPOT] NO_PRICE {symbol}')
+        save_paper_state()
         return
     
-    qty = margin * leverage / price
-    # Round down to appropriate precision
-    try:
-        info = _public_get('/fapi/v1/exchangeInfo')
-        for s in info.get('symbols', []):
-            if s['symbol'] == symbol:
-                for f in s['filters']:
-                    if f['filterType'] == 'LOT_SIZE':
-                        step = float(f['stepSize'])
-                        qty = int(qty / step) * step
-                        break
-                break
-    except:
-        qty = round(qty, 3)
+    if position_side == 'ENTER_LONG':
+        # 买入——用$500买
+        invest = min(MARGIN_PER_TRADE, PAPER_STATE['cash'] * 0.5)
+        if invest < 10:
+            log(f'[SPOT] 现金不足${PAPER_STATE["cash"]:.0f}')
+            save_paper_state()
+            return
+        
+        qty = invest / price
+        fee = qty * price * 0.001  # 0.1% taker buy fee
+        cost = invest
+        
+        if cost > PAPER_STATE['cash']:
+            log(f'[SPOT] 余额不足: 需${cost:.0f} 有${PAPER_STATE["cash"]:.0f}')
+            save_paper_state()
+            return
+        
+        PAPER_STATE['cash'] -= cost
+        
+        PAPER_STATE['positions'][symbol] = {
+            'side': 'LONG',
+            'qty': qty,
+            'entry': price,
+            'mark': price,
+            'upnl': 0.0,
+        }
+        PAPER_STATE['trades'] += 1
+        PAPER_STATE['total_fees'] += fee
+        
+        total_equity = PAPER_STATE['cash'] + qty * price
+        log(f'[SPOT] BUY {symbol} {qty:.4f}@${price:.2f} ${invest:.0f}')
+        log(f'[SPOT] 权益=${total_equity:.2f} | 现金=${PAPER_STATE["cash"]:.2f}')
+        
+    elif position_side == 'ENTER_SHORT':
+        # 现货不支持做空，卖出已有持仓
+        if symbol in PAPER_STATE['positions']:
+            pos = PAPER_STATE['positions'].pop(symbol)
+            pnl = (price - pos['entry']) * pos['qty']
+            fee = pos['qty'] * price * 0.001
+            proceeds = pos['qty'] * price - fee
+            PAPER_STATE['cash'] += proceeds
+            PAPER_STATE['total_pnl'] += pnl
+            PAPER_STATE['total_fees'] += fee
+            PAPER_STATE['trades'] += 1
+            log(f'[SPOT] SELL {symbol} {pos["qty"]:.4f}@${price:.2f} PnL=${pnl:+.2f}')
+        else:
+            log(f'[SPOT] 无持仓可卖 {symbol}')
     
-    if qty <= 0:
-        log(f'QTY_ZERO {symbol}')
-        return
-    
-    # 设置杠杆
-    _signed_post('/fapi/v1/leverage', {'symbol': symbol, 'leverage': int(leverage)})
-    
-    # 设置逐仓
-    _signed_post('/fapi/v1/marginType', {'symbol': symbol, 'marginType': 'ISOLATED'})
-    
-    # 开仓（市价单）
-    result = _signed_post('/fapi/v1/order', {
-        'symbol': symbol,
-        'side': side,
-        'type': 'MARKET',
-        'quantity': qty,
-        'positionSide': position_side,
-        'newOrderRespType': 'RESULT'
-    })
-    
-    if 'orderId' in result:
-        filled_qty = float(result.get('executedQty', qty))
-        avg_price = float(result.get('avgPrice', price))
-        log(f'''OPEN {symbol} {position_side} {filled_qty}@{avg_price:.2f} {leverage}x ${margin:.0f}''')
-        # 更新交易计数（每日限制）
-        save_state(market, track_trade=True)
-    else:
-        log(f'OPEN_FAIL {symbol}: {result.get("msg","?")}')
+    save_paper_state()
 
 def load_retro_params():
     """加载daily_retro输出的参数"""
@@ -510,40 +464,16 @@ def load_retro_params():
         except:
             pass
 
-def should_skip_check(market):
-    """检查高频交易限制+每日交易次数限制"""
-    today = datetime.now().strftime('%Y-%m-%d')
-    state = {}
-    if STATE_FILE.exists():
-        try:
-            state = json.loads(STATE_FILE.read_text())
-        except:
-            pass
-    
-    # 交易日次数限制
-    trade_date = state.get('trade_date', '')
-    trade_count = state.get('trade_count', 0)
-    if trade_date != today:
-        # 新的一天，重置计数
-        pass
-    elif trade_count >= DAILY_TRADE_LIMIT and not market['positions']:
-        log(f'  今日已交易{trade_count}次(上限{DAILY_TRADE_LIMIT})，跳过')
-        return True
-    
-    # 高频间隔检查
-    last_trade = state.get('last_trade_time', 0)
-    if last_trade and time.time() - last_trade < MIN_TRADE_INTERVAL:
-        log('  MIN_TRADE_INTERVAL未到，跳过')
-        return True
+def should_skip_check():
+    """虚拟盘每分钟都可跑，不设间隔"""
     return False
 
 # ── 主流程 ──
 def main():
-    log('=== 主权交易引擎启动 ===')
-    log(f'参数: {MAX_LEVERAGE}x | ${MARGIN_PER_TRADE}/仓 | 止损{DEFAULT_STOP_PCT}% | 最多{MAX_POSITIONS}仓')
-    
-    # 加载daily_retro参数
-    load_retro_params()
+    log('=== 现货虚拟盘启动 ===')
+    log(f'初始资金: ${PAPER_CAPITAL:.0f} | 每单$500 | 最多{MAX_POSITIONS}币 | 不止损')
+    load_paper_state()
+    log(f'当前: 现金=${PAPER_STATE["cash"]:.2f} | 持仓={len(PAPER_STATE["positions"])} | 总PnL=${PAPER_STATE["total_pnl"]:.2f}')
     
     # Step 1: 采集市场数据
     log('[1/4] 采集市场数据...')
@@ -551,27 +481,20 @@ def main():
     if market is None:
         log('  市场数据采集失败，跳过本轮回合')
         return
-    log(f'  BTC=${market["btc_price"]:.0f} ({market["btc_change_24h"]:+.2f}%)')
+    log(f'  BTC=${market["btc_price"]:.0f} ({market["btc_change_24h"]:+.2f}%) | 恐惧={market["fear_greed"]}')
     log(f'  权益=${market["equity"]:.2f} | 持仓={len(market["positions"])} | 日盈亏=${market["daily_pnl"]:.2f}')
     
-    # 日亏熔断检查
-    if market['daily_pnl'] < DAILY_LOSS_LIMIT:
-        log(f'⚠️ 日亏${market["daily_pnl"]:.2f}触达熔断线${DAILY_LOSS_LIMIT}，跳过本轮交易')
-        save_state(market)
-        return
+    # 日亏熔断检查（虚拟盘不熔断）
+    log(f'  [虚拟盘] 跳过熔断检查 | 权益=${market["equity"]:.2f}')
     
-    # 高频跳过检查
-    if should_skip_check(market):
-        log('  MIN_TRADE_INTERVAL未到，跳过')
-        save_state(market)
-        return
+    # 高频跳过检查（虚拟盘不跳过）
+    log('  [虚拟盘] 无间隔限制')
     
     # Step 2: AI分析
     log('[2/4] AI分析市场...')
     signal = analyze_market(market)
     if 'error' in str(signal):
         log(f'  AI分析失败: {signal}')
-        save_state(market)
         return
     
     log(f'  {signal.get("decision","?")} | {signal.get("reason","")} | 置信度={signal.get("confidence",0)}/10')
@@ -581,16 +504,13 @@ def main():
     passed, checks = check_five_gates(signal, market)
     log(f'  {"✅ 通过" if passed else "❌ 拦截"} | {json.dumps(checks)}')
     
-    # Step 4: 执行（5关通过即开枪，不设置信度门槛）
-    log('[4/4] 执行...')
+    # Step 4: 执行（虚拟盘）
+    log('[4/4] 虚拟执行...')
     if passed:
-        execute_trade(signal, market)
+        paper_execute(signal, market)
     else:
         log(f'  未执行: 5关自检未通过 | {json.dumps(checks)}')
     
-    # 保存状态
-    market['last_trade_time'] = time.time()
-    save_state(market)
     log('=== 完成 ===')
 
 if __name__ == '__main__':
