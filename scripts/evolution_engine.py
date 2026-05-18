@@ -16,7 +16,7 @@ MEMORY = BASE / 'memory'
 SCRIPTS = BASE / 'scripts'
 
 DS_KEY = os.environ.get('DEEPSEEK_API_KEY', '')
-MODEL = 'deepseek-chat'
+MODEL = 'deepseek-reasoner'  # Pro版, 更强推理, 不限制Token
 
 def log(msg):
     t = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
@@ -90,7 +90,7 @@ def gpt_evolve(data):
     else:
         binance_summary = "\n  暂无币安数据"
     
-    prompt = f"""你是暗黑星火资本CEO，全托管模式。唯一目标：赚钱。
+    prompt = f"""你是暗黑星火资本CEO，全托管模式。铁律只有一条：赚钱。其他都是扯淡。
 
 === 4虚拟盘状态 ===
 {perf_summary if perf_summary else '  全部idle, 0交易'}
@@ -98,52 +98,51 @@ def gpt_evolve(data):
 === 币安5月真实历史 ===
 {binance_summary}
 
-=== 核心教训(历史证明) ===
-- 用户自己操作=赚钱(BTC+$92, AVNT+$20)
-- AI自作主张=全亏(AIGENSYN -$241, ETH -$92)
-- 只做主流币(BTC/ETH/SOL/DOGE), 不做小币(AIGENSYN永久黑名单)
-- 手续费$80+是确定亏损, 高频交易=烧钱
-- 熊市只做空不做多
-- 日亏$5熔断
+=== 历史教训(喂给进化用) ===
+- 用户自己操作=赚钱(BTC+$92, AVNT+$20, RUNE+$17)
+- AI自作主张=全亏(5月净-$462, AIGENSYN单币亏-$241)
+- 手续费$80是确定亏损, 高频交易=慢性自杀
+- 熊市做空赚钱, 做多亏钱
+- 主流币(BTC/ETH/SOL/DOGE)有流动性, 小币一买就套
 
-你的任务: 为4个策略生成下一周期的参数。
-如果策略0交易0PnL, 保持hold等信号。
-如果策略持续亏损, 缩小仓位或暂停。
+你的任务: 分析所有数据, 为4个策略生成最优参数。
+不要保守。有信号就干, 没信号就等。
+要赌就赌大的, 但不赌就是最稳的赚。
 
-只输出以下JSON, 不要markdown包裹:
+只输出JSON, 不要markdown包裹:
 {{{{
-  "market": "bullish/bearish/sideways",
+  "market": "bullish/bearish/sideways(一句话理由)",
   "strategies": {{{{
     "meanrevert_paper": {{{{
       "active": true/false,
-      "rsi_oversold": 数值(当前20),
-      "rsi_overbought": 数值(当前55),
-      "position_pct": 浮点数(当前0.3),
+      "rsi_oversold": 整数,
+      "rsi_overbought": 整数,
+      "position_pct": 浮点数0-1.0,
       "action": "hold/open/close"
     }}}},
     "rsi_meanrev_paper": {{{{
       "active": true/false,
-      "rsi_oversold": 数值(当前30),
-      "rsi_overbought": 数值(当前70),
-      "position_pct": 浮点数(当前0.2),
+      "rsi_oversold": 整数,
+      "rsi_overbought": 整数,
+      "position_pct": 浮点数0-1.0,
       "action": "hold/open/close"
     }}}},
     "combo31_paper": {{{{
       "active": true/false,
-      "leverage": 整数(当前5),
-      "position_pct": 浮点数(当前0.2),
+      "leverage": 整数1-20,
+      "position_pct": 浮点数0-1.0,
       "action": "hold/open/close"
     }}}},
     "futures_paper": {{{{
       "active": true/false,
-      "leverage": 整数(当前5),
-      "position_pct": 浮点数(当前0.4),
+      "leverage": 整数1-20,
+      "position_pct": 浮点数0-1.0,
       "action": "hold/open/close"
     }}}}
   }}}},
   "risk": {{{{
-    "daily_loss_limit": 浮点数(当前5.0),
-    "max_open_positions": 整数(当前2),
+    "daily_loss_limit": 浮点数,
+    "max_open_positions": 整数,
     "advice": "一句话建议"
   }}}}
 }}}}
@@ -154,7 +153,7 @@ def gpt_evolve(data):
             json={
                 'model': MODEL,
                 'messages': [
-                    {'role': 'system', 'content': '你是暗黑星火资本CEO。全托管，盈利唯一目标。输出严格JSON。'},
+                    {'role': 'system', 'content': '你是暗黑星火资本CEO。全托管, 盈利是唯一真理。敢做敢当, 没信号就等, 有信号就干。输出严格JSON。'},
                     {'role': 'user', 'content': prompt}
                 ],
                 'max_tokens': 2000,
