@@ -1,58 +1,59 @@
 {
-  "time": "2026-05-18T23:30:44",
-  "epoch": 1779118244.7847311,
-  "analysis_summary": "🔴亏损态强制全盘分析 | BEARISH周期持续 | BTC $76,074(-2.46%)测试$76K关键支撑1.5小时无反弹 | BCH $371.30(-9.86%)暴跌后企稳但波动率17.5%仍高危 | DOGE $0.103(-6.49%)领跌 | 实盘0持仓(安全) | combo31_paper短仓浮盈+$1,064(BTC)+$26(ETH)+$10.38(SOL)全部盈利 | BCH 50x near-liquidation根因已定位: stop_loss_multi.py止损价>强平价",
-  "key_observations": [
-    "BTC $76K磨底1.5小时——无放量破位也无反弹结构，成交量递减40%",
-    "BCH日波动17.5%——50x杠杆是致命设计错误，已总结为硬规则",
-    "combo31_paper的BTC短仓浮盈+13.8%——趋势有利但$76K破位/反弹概率65/35",
-    "futures_paper ETH短仓+2.2%——微盈正常持有",
-    "DOGE -6.49%是山寨最弱指标——如果DOGE日-8%以上突破$0.095可能是底部信号",
-    "情报advisory: 空头趋势明确，集中火力做空高波动品种，严格止损，勿逆势抄底——与DS-0判读一致"
-  ],
+  "time": "2026-05-18T23:46:00",
+  "epoch": 1779119160,
+  "analysis_summary": {
+    "regime": "bearish",
+    "total_equity_usd": 317.39,
+    "total_pnl": -12.97,
+    "pnl_status": "loss",
+    "live_positions": 0,
+    "paper_strategies_with_positions": ["combo31_paper", "futures_paper"],
+    "btc_price": 76322.09,
+    "btc_24h_change_pct": -2.191,
+    "market_assessment": "BTC $76,322 weak bounce from $76,051 low — failed to reach $76,550 reversal confirmation. Bearish structure intact. Volume declining 45% from session peak. 70/30 breakdown/bounce probability. BCH -9.8%, DOGE -5.96%, ETH -3.59% all confirming bearish momentum. No intel signals detected.",
+    "key_risk": "BTC still at $76K decision point. If breaks below $76K, cascade to $74K-$75K. Contract trading still paused — 3 infrastructure fixes pending."
+  },
   "decisions": [
     {
-      "id": "D-001",
-      "domain": "实盘",
-      "action": "PAUSE",
-      "detail": "合约交易继续暂停。需完成3项基础设施加固才能恢复：(1) stop_loss_multi.py添加强平价校验 (2) 按波动率限制最大杠杆 (3) 部署前安全预检。实盘账户$315.93安全。"
+      "target": "shared_config",
+      "action": "updated_to_v21",
+      "changes": [
+        "Probability shifted from 65/35 to 70/30 breakdown/bounce — failed bounce reduces bounce probability",
+        "combo31_paper: tightened trail triggers — weak bounce means closer stop for reduce signals",
+        "All other strategies: no parameter changes — current settings appropriate for bearish regime",
+        "Contract trading: remains paused, no ETA change"
+      ]
     },
     {
-      "id": "D-002",
-      "domain": "BCH事件修复",
-      "action": "ROOT_CAUSE_RESOLVED",
-      "detail": "根因: stop_loss_multi.py对于做空的止损价$373.88高于强平价$371.85 —— 止损永远不会触发因为强平先到。修复方案: 所有止损订单必须验证做空时 stop_price < liq_price，做多时 stop_price > liq_price，且有≥2%缓冲空间。新规则: 波动率>8%/12%/15%的币种分别限3x/1x/0x杠杆。"
+      "target": "combo31_paper",
+      "action": "hold_trail",
+      "reason": "3 shorts all in profit. BTC failed bounce confirms bearish pressure. Hold with updated trail: reduce 25% at $76,550, close 50% at $76,800. Add trigger at $75,800 if slow bleed below $76K."
     },
     {
-      "id": "D-003",
-      "domain": "combo31_paper",
-      "action": "HOLD_TRAIL",
-      "detail": "BTC短仓$1,064盈利(+13.8% margin)持有。收紧追踪: (a) BTC反弹>$76,550减25% (b) BTC反弹>$76,800减50% (c) BTC破$76K放量则持有至$74K目标 (d) BTC慢跌破$76K在$75,800加0.05x。ETH和SOL短仓继续持有。"
+      "target": "futures_paper",
+      "action": "hold",
+      "reason": "ETH short in profit. Approaching $2,091 wedge. If break below with volume = hold for $2,050. No change from v20."
     },
     {
-      "id": "D-004",
-      "domain": "futures_paper",
-      "action": "HOLD",
-      "detail": "ETH短仓$2,112→$2,094, +$8.82(+2.2%)。ETH正逼近$2,091楔形支撑。收紧: 反弹>$2,120减50%, 破$2,091在$2,080加0.3x目标$2,030。"
+      "target": "meanrevert_paper",
+      "action": "wait",
+      "reason": "No mean reversion setup. Bearish grind invalidates oversold bounces."
     },
     {
-      "id": "D-005",
-      "domain": "meanrevert_paper",
-      "action": "WAIT",
-      "detail": "$1,003.40现金待命。BTC磨底结构不适合均值回归做多。RSI_oversold=18保持。等待放量破位后的恐慌买入或有效反弹结构。"
+      "target": "rsi_meanrev_paper",
+      "action": "wait",
+      "reason": "DOGE -5.96% still weakest. RSI_oversold=13 correctly blocks premature entry."
     },
     {
-      "id": "D-006",
-      "domain": "rsi_meanrev_paper",
-      "action": "WAIT",
-      "detail": "$995.51现金待命。DOGE领跌环境下极端RSI并不意味反转。RSI_oversold=13保护有效。等待BTC明确方向后行动。"
+      "target": "contract_trading",
+      "action": "paused",
+      "reason": "3 infrastructure fixes still pending from BCH 50x near-liquidation incident. No live contract positions."
+    },
+    {
+      "target": "live_trading",
+      "action": "no_action",
+      "reason": "0 live positions. No changes needed. Contract paused."
     }
   ],
-  "risk_flags": {
-    "BTC_76K_breakdown_risk": "high",
-    "BCH_volatility_risk": "extreme",
-    "DOGE_leading_weakness_risk": "medium",
-    "infrastructure_readiness": "not_ready",
-    "overall": "controlled_loss"
-  }
+  "intel_assessment": "No intel data available — intel.json empty/missing. No whale movements or news signals to factor."
 }
