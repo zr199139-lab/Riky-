@@ -1,12 +1,12 @@
 {
-  "updated_at": "2026-05-18T20:30:55",
-  "market_assessment": "bearish: All majors negative. BCH crashed -9.3% from $415 to $348 low, currently bouncing to $375 (+7.8% short-covering bounce). BTC at $77,309 failing to reclaim $78K. ETH at $2,143 testing $2,091 support. DOGE -6.1% accelerating downside. The bounce is a dead cat bounce in an active downtrend. CRITICAL: Two real positions (ETH 150x, BCH 75x) within $5 of liquidation from previous config's 'close all' command that wasn't executed. IMMEDIATE CLOSURE REQUIRED.",
+  "updated_at": "2026-05-18T20:49:56",
+  "market_assessment": "bearish: All major coins negative. BTC $77,696(-0.93%) failing to reclaim $78K. BCH $376.80(-9.14%) severely bearish after crash from $415. DOGE $0.106(-5.40%) weakest performer. ETH $2,152(-1.97%) bouncing from $2,091 low but momentum fading. SOL $85.61(-1.44%), XRP $1.40(-1.76%). This is an active downtrend with temporary dead cat bounces. BCH recovery from $348 low to $376 is short-covering, not trend reversal. DOGE accelerating downside confirms risk-off sentiment.",
   "regime": "bearish",
   "risk_control": {
     "daily_loss_limit": 5.0,
     "max_positions": 0,
-    "max_drawdown_per_position": 2.0,
-    "urgent_advice": "EMERGENCY: ETH 150x LONG距清算仅$4.53，BCH 75x LONG距清算仅$2.54。立即平仓全部实盘！空头趋势明确。BCH反弹至$375区域动力减弱（从$348到$375已+7.8%），衰竭后可部署空单。BTC若跌破$76K将加速下挫。DOGE表现最弱（-6.1%），适合空头目标。"
+    "max_drawdown_per_position": 5.0,
+    "urgent_advice": "EMERGENCY RESOLVED: BCH LONG 75x(liq $1.94 away) and ETH LONG 150x(liq $4.68 away) closed via direct API at 20:48. Wallet recovered to $33.03. All real positions now $0. Bearish trend confirmed. DO NOT open new LONG positions. BCH bounce to $378-382 zone is exhaustion signal for SHORT entry. No new real positions until BTC reclaims $80K or regime changes."
   },
   "strategies": {
     "meanrevert_paper": {
@@ -14,7 +14,8 @@
       "rsi_overbought": 70,
       "position_pct": 0.0,
       "action": "wait",
-      "stop_loss_atr": 1.5
+      "stop_loss_atr": 1.5,
+      "reason": "No position, $1003.40 cash. Stay in wait mode until clear reversal signal."
     },
     "rsi_meanrev_paper": {
       "rsi_oversold": 25,
@@ -22,19 +23,19 @@
       "position_pct": 0.0,
       "action": "close",
       "stop_loss_pct": 0.03,
-      "reason": "DOGE LONG在-6.1%日的反弹中逆势做多，关闭转向空头"
+      "reason": "DOGE LONG 1869.86 @ $0.10696. DOGE weakest coin at -5.4%. Close immediately. DOGE is leading downside, no reason to hold a long."
     },
     "combo31_paper": {
       "leverage": 1.5,
       "position_pct": 0.15,
       "action": "hold",
-      "reason": "BTC/ETH/SOL三空方向正确，反弹浮亏是暂时的，小幅加仓至15%仓位"
+      "reason": "BTC SHORT @ $77,138, ETH SHORT @ $2,120, SOL SHORT @ $85.06. Three shorts in bearish market — correct direction. Bounce is temporary, hold through it. Consider adding 5% on $78K+ BTC bounce retest."
     },
     "futures_paper": {
       "leverage": 1,
       "position_pct": 0.25,
       "action": "hold",
-      "reason": "ETH空头方向正确，反弹到$2,150~$2,180区间可加仓"
+      "reason": "ETH SHORT @ $2,112.31, 0.947 ETH, margin $400. Currently underwater (~$38 unrealized) as ETH bounced from $2,091 to $2,152. Direction is correct for bearish regime. Hold and consider averaging up if ETH retests $2,170-2,180."
     }
   },
   "spot_execution": {
@@ -49,7 +50,7 @@
     "margin_usdt": 0,
     "stop_loss_price": 385.0,
     "take_profit_price": 340.0,
-    "reason": "BCH崩盘反弹接近尾声。等待反弹至$378-$382区域无法突破后部署空单。现价$375.8追空风险偏高，等反弹衰竭信号。BTC破$76K时同步入场。"
+    "reason": "BCH bounce from $348 to $376(+8%) is running out of steam. Wait for bounce to peak at $378-382 area with bearish candle rejection, then deploy short. Risk: further squeeze to $390 is possible. Stop at $385 tight, TP at $340. Confirm with BTC rejecting $78K."
   },
-  "version": 8
+  "version": 9
 }
