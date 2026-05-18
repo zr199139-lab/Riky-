@@ -1,37 +1,37 @@
 {
-  "updated_at": "2026-05-18T20:00:15",
-  "market_assessment": "bearish: BCH crash -13.81% confirms whale liquidation cascade. All majors deep red (BTC -1.44%, ETH -2.63%, SOL -2.19%, DOGE -5.78%). No reversal signals. Previous close orders not executed by paper engine - code patched with FORCE_CLOSE support.",
+  "updated_at": "2026-05-18T20:15:30",
+  "market_assessment": "bearish: BCH crash -13.2% confirmed whale liquidation from $415 to $348 low. Bounce to $359 (+3.2%) = short-covering bounce. All majors weak (BTC -1.2%, ETH -2.2%, DOGE -5.9%). Bounce phase dangerous for both longs AND shorts. Strategy: go to cash, wait for bounce exhaustion before re-entering shorts.",
   "regime": "bearish",
   "risk_control": {
-    "daily_loss_limit": 3.0,
-    "max_positions": 2,
-    "max_drawdown_per_position": 5.0,
-    "urgent_advice": "熊市确认+BCH暴跌13.8%流动性危机。强制平掉所有多头仓位。做空仓位降低杠杆并加止损。日亏$3熔断保护本金。"
+    "daily_loss_limit": 2.0,
+    "max_positions": 0,
+    "max_drawdown_per_position": 3.0,
+    "urgent_advice": "BCH崩盘余震中。反弹阶段双杀风险极高。所有实盘仓位强制平仓。虚拟盘关闭亏损仓位。配置版version升级到7。等待BTC跌破$76K或BCH回踩$350后再开空。"
   },
   "strategies": {
     "meanrevert_paper": {
-      "rsi_oversold": 25,
-      "rsi_overbought": 60,
+      "rsi_oversold": 20,
+      "rsi_overbought": 65,
       "position_pct": 0.0,
       "action": "close",
       "stop_loss_atr": 1.5
     },
     "rsi_meanrev_paper": {
-      "rsi_oversold": 25,
-      "rsi_overbought": 60,
+      "rsi_oversold": 20,
+      "rsi_overbought": 65,
       "position_pct": 0.0,
       "action": "close",
-      "stop_loss_pct": 0.06
+      "stop_loss_pct": 0.05
     },
     "combo31_paper": {
       "leverage": 1.5,
-      "position_pct": 0.15,
-      "action": "hold"
+      "position_pct": 0.10,
+      "action": "reduce"
     },
     "futures_paper": {
-      "leverage": 2,
-      "position_pct": 0.15,
-      "action": "hold"
+      "leverage": 1,
+      "position_pct": 0.0,
+      "action": "close"
     }
   },
   "spot_execution": {
@@ -40,13 +40,13 @@
   },
   "contract": {
     "active": false,
-    "symbol": "ETH/USDT",
+    "symbol": "BCH/USDT",
     "direction": "short",
     "leverage": 2,
     "margin_usdt": 0,
-    "stop_loss_price": 2180.0,
-    "take_profit_price": 2050.0,
-    "reason": "熊市确认但纸盘ETH空单亏损中(+$22浮亏)，实盘暂不部署。等待纸盘空单盈利或更低点位再考虑实盘。"
+    "stop_loss_price": 375.0,
+    "take_profit_price": 320.0,
+    "reason": "BCH崩盘目标清晰，但反弹未结束。等待BCH反弹至$365-$370区域无法突破后，再实盘部署空单。现价$359不宜追空。"
   },
-  "version": 6
+  "version": 7
 }

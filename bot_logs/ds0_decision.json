@@ -1,58 +1,53 @@
 {
-  "time": "2026-05-18T20:00:15",
-  "epoch": 1779105615.632,
+  "time": "2026-05-18T20:15:30",
+  "epoch": 1779106530.063,
   "analysis_summary": {
-    "market": "bearish - BCH -13.81% crash (whale liquidation cascade), all majors red 1-6%",
-    "real_pnl": 0.0,
-    "paper_pnl": -10.78,
-    "total_pnl_status": "loss",
-    "btc_price": 77293.5,
-    "btc_24h_change": -1.437,
-    "key_event": "BCH CRASH -13.81% - cascading liquidations, potential contagion to other alts",
-    "critical_bug_found": "Paper strategies ignored 'action: close' command - code lacks FORCE_CLOSE handler. Patched both meanrevert_paper.py and rsi_meanrev_paper.py to support forced close via config.",
-    "intel_available": false
+    "regime_assessment": "bearish",
+    "key_event": "BCH -13.2% whale liquidation crash, bounce in progress",
+    "btc_status": "BTC $77,441 (-1.2%) moderate decline, bounce from intraday low",
+    "total_pnl": -4.20,
+    "loss_drivers": "BCH SHORT 20x bouncing (+$0.81 loss), futures_paper ETH short (-$30 float loss), rsi_meanrev DOGE long underwater"
   },
   "decisions": [
     {
-      "target": "market_regime",
-      "action": "set_bearish",
-      "reason": "BTC -1.44%, all majors red, BCH -13.81% crash confirms bear market. No reversal signals anywhere."
+      "target": "real_ETH_LONG_20x",
+      "action": "close",
+      "reason": "20x多头在熊市反弹中风险极高。强平距仅-4.8%。市场趋势向下，反弹是离场机会而非加仓信号。"
     },
     {
-      "target": "critical_bug_fix",
-      "action": "add_force_close_to_strategies",
-      "reason": "Previous 'close' commands ignored by paper engine. meanrevert_paper.py and rsi_meanrev_paper.py had no code to read 'action' field. Both patched with FORCE_CLOSE handler."
+      "target": "real_BCH_SHORT_20x",
+      "action": "close",
+      "reason": "BCH从$348反弹+3.2%至$359，空头浮亏$0.81。强平距$372仅+3.8%。反弹阶段空头容易被挤压。先平仓，等反弹衰竭再进。"
     },
     {
-      "target": "meanrevert_paper",
-      "action": "force_close",
-      "reason": "ETH long in bear market. Entry 2120.18, current 2134.3 (slight profit +$2). Close before reversal wipes out gains. FORCE_CLOSE now works via code patch."
+      "target": "rsi_meanrev_paper_DOGE_LONG",
+      "action": "close",
+      "reason": "DOGE -5.9%当日跌幅确认RSI均值回归策略失败。DOGE在meme币抛售潮中持续走弱。"
     },
     {
-      "target": "rsi_meanrev_paper",
-      "action": "force_close",
-      "reason": "DOGE long crashed -5.78%. Entry 0.10696, current 0.10509 (loss -$3.50). Catching falling knife. FORCE_CLOSE now works via code patch."
+      "target": "futures_paper_ETH_SHORT",
+      "action": "close",
+      "reason": "ETH短空亏损$30（-5%本金）。ETH在BCH崩盘中表现出相对强势（仅-2.2%），短期反弹动能强。止损出场。"
     },
     {
-      "target": "combo31_paper",
-      "action": "hold_shorts_reduce_size",
-      "reason": "Direction (short) correct for bear market. BTC short underwater -$2, ETH short -$5.39, SOL short +$0.53. Reduce leverage 2x→1.5x, position 0.25→0.15 to limit drawdown on bad entries."
+      "target": "combo31_paper_3shorts",
+      "action": "reduce",
+      "reason": "熊市逻辑未变但反弹阶段缩小仓位。从15%降至10%降低反弹风险。如果BTC跌破$76,500恢复15%仓位。"
     },
     {
-      "target": "futures_paper",
-      "action": "hold_short_reduce_leverage_add_stop",
-      "reason": "ETH short entry 2112.31, current 2134.3 (unrealized loss -$22). Direction correct but early. Reduce from 3x→2x, position 0.2→0.15. Stop loss already set at 2180 (2.1% above)."
+      "target": "risk_config",
+      "action": "tighten",
+      "reason": "BCH崩盘期间黑天鹅风险上升。日亏损限额从$3降至$2。单仓最大回撤从5%降至3%。"
     },
     {
-      "target": "contract_real",
-      "action": "disable_deployment",
-      "reason": "Paper shorts already -$22 underwater on ETH. Real capital only $45 futures wallet + $30 spot USDT = too small. Wait for paper recovery and better entry."
-    },
-    {
-      "target": "risk_control",
-      "action": "tighten_limits",
-      "reason": "Daily loss limit 5.0→3.0. Max drawdown per position 8%→5%. Total -$10.78 loss demands tighter risk parameters."
+      "target": "contract_deploy",
+      "action": "wait",
+      "reason": "BCH空单最佳入场点：反弹至$365-$370无法突破时。现价$359追空风险高。"
     }
   ],
-  "version": 6
+  "intel_used": {
+    "advisory_regime": "bearish",
+    "advisory_advice": "空头趋势明确，集中火力做空高波动品种，严格止损，勿逆势抄底",
+    "intel_file": "empty - no intel available"
+  }
 }
