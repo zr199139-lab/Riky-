@@ -1,37 +1,40 @@
 {
-  "updated_at": "2026-05-18T20:15:30",
-  "market_assessment": "bearish: BCH crash -13.2% confirmed whale liquidation from $415 to $348 low. Bounce to $359 (+3.2%) = short-covering bounce. All majors weak (BTC -1.2%, ETH -2.2%, DOGE -5.9%). Bounce phase dangerous for both longs AND shorts. Strategy: go to cash, wait for bounce exhaustion before re-entering shorts.",
+  "updated_at": "2026-05-18T20:30:55",
+  "market_assessment": "bearish: All majors negative. BCH crashed -9.3% from $415 to $348 low, currently bouncing to $375 (+7.8% short-covering bounce). BTC at $77,309 failing to reclaim $78K. ETH at $2,143 testing $2,091 support. DOGE -6.1% accelerating downside. The bounce is a dead cat bounce in an active downtrend. CRITICAL: Two real positions (ETH 150x, BCH 75x) within $5 of liquidation from previous config's 'close all' command that wasn't executed. IMMEDIATE CLOSURE REQUIRED.",
   "regime": "bearish",
   "risk_control": {
-    "daily_loss_limit": 2.0,
+    "daily_loss_limit": 5.0,
     "max_positions": 0,
-    "max_drawdown_per_position": 3.0,
-    "urgent_advice": "BCH崩盘余震中。反弹阶段双杀风险极高。所有实盘仓位强制平仓。虚拟盘关闭亏损仓位。配置版version升级到7。等待BTC跌破$76K或BCH回踩$350后再开空。"
+    "max_drawdown_per_position": 2.0,
+    "urgent_advice": "EMERGENCY: ETH 150x LONG距清算仅$4.53，BCH 75x LONG距清算仅$2.54。立即平仓全部实盘！空头趋势明确。BCH反弹至$375区域动力减弱（从$348到$375已+7.8%），衰竭后可部署空单。BTC若跌破$76K将加速下挫。DOGE表现最弱（-6.1%），适合空头目标。"
   },
   "strategies": {
     "meanrevert_paper": {
-      "rsi_oversold": 20,
-      "rsi_overbought": 65,
+      "rsi_oversold": 25,
+      "rsi_overbought": 70,
       "position_pct": 0.0,
-      "action": "close",
+      "action": "wait",
       "stop_loss_atr": 1.5
     },
     "rsi_meanrev_paper": {
-      "rsi_oversold": 20,
-      "rsi_overbought": 65,
+      "rsi_oversold": 25,
+      "rsi_overbought": 70,
       "position_pct": 0.0,
       "action": "close",
-      "stop_loss_pct": 0.05
+      "stop_loss_pct": 0.03,
+      "reason": "DOGE LONG在-6.1%日的反弹中逆势做多，关闭转向空头"
     },
     "combo31_paper": {
       "leverage": 1.5,
-      "position_pct": 0.10,
-      "action": "reduce"
+      "position_pct": 0.15,
+      "action": "hold",
+      "reason": "BTC/ETH/SOL三空方向正确，反弹浮亏是暂时的，小幅加仓至15%仓位"
     },
     "futures_paper": {
       "leverage": 1,
-      "position_pct": 0.0,
-      "action": "close"
+      "position_pct": 0.25,
+      "action": "hold",
+      "reason": "ETH空头方向正确，反弹到$2,150~$2,180区间可加仓"
     }
   },
   "spot_execution": {
@@ -44,9 +47,9 @@
     "direction": "short",
     "leverage": 2,
     "margin_usdt": 0,
-    "stop_loss_price": 375.0,
-    "take_profit_price": 320.0,
-    "reason": "BCH崩盘目标清晰，但反弹未结束。等待BCH反弹至$365-$370区域无法突破后，再实盘部署空单。现价$359不宜追空。"
+    "stop_loss_price": 385.0,
+    "take_profit_price": 340.0,
+    "reason": "BCH崩盘反弹接近尾声。等待反弹至$378-$382区域无法突破后部署空单。现价$375.8追空风险偏高，等反弹衰竭信号。BTC破$76K时同步入场。"
   },
-  "version": 7
+  "version": 8
 }

@@ -1,53 +1,34 @@
 {
-  "time": "2026-05-18T20:15:30",
-  "epoch": 1779106530.063,
-  "analysis_summary": {
-    "regime_assessment": "bearish",
-    "key_event": "BCH -13.2% whale liquidation crash, bounce in progress",
-    "btc_status": "BTC $77,441 (-1.2%) moderate decline, bounce from intraday low",
-    "total_pnl": -4.20,
-    "loss_drivers": "BCH SHORT 20x bouncing (+$0.81 loss), futures_paper ETH short (-$30 float loss), rsi_meanrev DOGE long underwater"
-  },
-  "decisions": [
-    {
-      "target": "real_ETH_LONG_20x",
-      "action": "close",
-      "reason": "20x多头在熊市反弹中风险极高。强平距仅-4.8%。市场趋势向下，反弹是离场机会而非加仓信号。"
-    },
-    {
-      "target": "real_BCH_SHORT_20x",
-      "action": "close",
-      "reason": "BCH从$348反弹+3.2%至$359，空头浮亏$0.81。强平距$372仅+3.8%。反弹阶段空头容易被挤压。先平仓，等反弹衰竭再进。"
-    },
-    {
-      "target": "rsi_meanrev_paper_DOGE_LONG",
-      "action": "close",
-      "reason": "DOGE -5.9%当日跌幅确认RSI均值回归策略失败。DOGE在meme币抛售潮中持续走弱。"
-    },
-    {
-      "target": "futures_paper_ETH_SHORT",
-      "action": "close",
-      "reason": "ETH短空亏损$30（-5%本金）。ETH在BCH崩盘中表现出相对强势（仅-2.2%），短期反弹动能强。止损出场。"
-    },
-    {
-      "target": "combo31_paper_3shorts",
-      "action": "reduce",
-      "reason": "熊市逻辑未变但反弹阶段缩小仓位。从15%降至10%降低反弹风险。如果BTC跌破$76,500恢复15%仓位。"
-    },
-    {
-      "target": "risk_config",
-      "action": "tighten",
-      "reason": "BCH崩盘期间黑天鹅风险上升。日亏损限额从$3降至$2。单仓最大回撤从5%降至3%。"
-    },
-    {
-      "target": "contract_deploy",
-      "action": "wait",
-      "reason": "BCH空单最佳入场点：反弹至$365-$370无法突破时。现价$359追空风险高。"
-    }
+  "time": "2026-05-18T20:30:55",
+  "epoch": 1779107455,
+  "analysis_summary": "亏损-$5.60。关键发现：上次20:15决策命令全部平仓，但ETH 150x和BCH 75x实盘仓仍存活，距清算分别仅$4.53和$2.54。市场明确空头（所有币种24h下跌），BCH从$415崩至$348后反弹至$375（+7.8%空头挤压反弹）。虚拟盘中3个空头方向正确（combo31 BTC/ETH/SOL, futures_paper ETH），应持有。DOGE LONG逆势亏损需关闭。",
+  "key_findings": [
+    "ETH 150x LONG距清算$4.53——$51钱包面临归零风险",
+    "BCH 75x LONG距清算$2.54——BCH日波动$67，风险不可接受",
+    "上次config已命令平仓但未执行，这是执行层失效",
+    "所有币种24h收跌，空头趋势明确",
+    "BCH反弹+7.8%属于空头挤压，并非趋势反转",
+    "虚拟盘3个空头持有正确，反弹浮亏策略性容忍"
   ],
-  "intel_used": {
-    "advisory_regime": "bearish",
-    "advisory_advice": "空头趋势明确，集中火力做空高波动品种，严格止损，勿逆势抄底",
-    "intel_file": "empty - no intel available"
-  }
+  "decisions": [
+    "EMERGENCY: 实盘平仓ETH LONG (150x) 和 BCH LONG (75x)",
+    "实盘调至max_positions=0, 禁止开新仓",
+    "rsi_meanrev关闭DOGE LONG",
+    "combo31维持BTC/ETH/SOL空头, 仓位从10%增至15%",
+    "futures_paper维持ETH空头, 仓位从0%增至25%",
+    "meanrevert保持空仓等待",
+    "BCH空单预备方案：反弹$378-$382无法突破时部署, 止损$385, 止盈$340",
+    "BTC跌破$76K时触发加速空头部署",
+    "version从7升级至8",
+    "daily_loss_limit从$2放宽到$5以给予虚拟盘空头margin room"
+  ],
+  "market_signals": {
+    "regime": "bearish",
+    "btc_24h": -1.43,
+    "bch_24h": -9.29,
+    "strongest": "BTC (-1.43%)",
+    "weakest": "BCH (-9.29%) / DOGE (-6.13%)",
+    "bounce_candidates": ["BCH反弹衰竭→空", "DOGE加速下跌→空"]
+  },
+  "risk_assessment": "CRITICAL — liquidation risk on 2 positions, wallet under-collateralized"
 }
