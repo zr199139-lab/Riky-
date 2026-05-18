@@ -141,10 +141,12 @@ if __name__ == '__main__':
         state['daily_date'] = today
     
     balance = get_balance(ex)
-    log(f'合约余额: ${balance:.2f} | 今日已亏: ${state[\"daily_pnl\"]:+.2f}')
+    daily_pnl = state['daily_pnl']
+    log(f'合约余额: ${balance:.2f} | 今日已亏: ${daily_pnl:+.2f}')
     
     if state['daily_pnl'] <= -MAX_LOSS_PER_DAY:
-        log(f'[HALT] 日亏已达${abs(state[\"daily_pnl\"]):.0f} > $10, 暂停交易')
+        dp = abs(state['daily_pnl'])
+        log(f'[HALT] 日亏已达${dp:.0f} > $10, 暂停交易')
         sys.exit(0)
     
     # 1. 检查现有持仓
@@ -264,5 +266,6 @@ if __name__ == '__main__':
     
     save_state(state)
     pos = get_balance(ex)
-    log(f'余额: ${pos:.2f} | 今日交易: {state[\"trades\"]}笔')
+    trades = state['trades']
+    log(f'余额: ${pos:.2f} | 今日交易: {trades}笔')
     log('=== 完成 ===')
