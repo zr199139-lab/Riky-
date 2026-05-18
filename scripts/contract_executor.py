@@ -144,6 +144,12 @@ def open_short(ex, symbol, margin, leverage):
         pass
     
     try:
+        # 强制逐仓模式
+        ex.set_margin_mode('isolated', sym)
+    except:
+        pass
+    
+    try:
         ticker = ex.fetch_ticker(sym)
         price = ticker['last']
     except:

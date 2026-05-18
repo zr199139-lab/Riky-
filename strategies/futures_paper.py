@@ -200,9 +200,8 @@ while True:
                 side = pos['side']  # 'short'
                 qty = pos['qty']
                 
-                # 计算PnL (合约模式: 保证金 + 浮动盈亏)
-                pnl_raw = (entry - price) * qty if side == 'short' else (price - entry) * qty
-                pnl = pnl_raw * LEVERAGE
+                # 计算PnL (合约模式: qty已含杠杆, PnL直接算)
+                pnl = (entry - price) * qty if side == 'short' else (price - entry) * qty
                 
                 # 止损: ATR×1.0 或 固定3%取小值
                 stop_dist = min(m['atr'] * 1.0, entry * 0.03)
@@ -307,9 +306,9 @@ while True:
                 t = ex.fetch_ticker(pos['symbol'])
                 mp = t['last']
                 if pos['side'] == 'short':
-                    equity += pos['margin'] + (pos['entry'] - mp) * pos['qty'] * LEVERAGE
+                    equity += pos['margin'] + (pos['entry'] - mp) * pos['qty']
                 else:
-                    equity += pos['margin'] + (mp - pos['entry']) * pos['qty'] * LEVERAGE
+                    equity += pos['margin'] + (mp - pos['entry']) * pos['qty']
             except:
                 equity += pos['margin']
         
