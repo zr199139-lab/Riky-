@@ -1,74 +1,54 @@
 {
-  "time": "2026-05-18T21:15:10",
-  "epoch": 1779110110,
-  "total_pnl": -3.96,
-  "total_pnl_status": "loss",
-  "regime": "bearish",
-  "analysis_summary": "Bearish regime confirmed. All 6 tracked coins negative. BCH -8.93% leading downside with extreme volatility($348-$414 range=17.5%). DOGE -4.74% weakest. BTC -0.97% failing $78K. ETH -1.93% bounce fading. BCH real position 2.381@$375.81(75x, liq $372.85=only $2.97 away) still open after partial close from 3.193. This is the #1 risk - liquidation distance is 0.79% on a coin with 17.5% daily range. DOGE paper long also still open despite previous close instruction. Short positions(combo31 BTC/ETH/SOL, futures_paper ETH) all directionally correct but slightly underwater from intraday bounce. The bounce is short-covering, not trend reversal. BCH volume 109K vs BTC 13K = abnormal distribution pattern.",
+  "time": "2026-05-18T21:30:14",
+  "epoch": 1779111014,
+  "analysis_summary": "Full deep analysis triggered by loss status($-3.99). Market bearish: all 6 coins negative. BTC failed $78K resistance. BCH -8.76% biggest loser. DOGE -4.99% weakest. 3 key decisions: (1) ESCALATE DOGE long close - 3rd attempt, previous ignored. (2) Hold all combo/futures shorts - direction correct, bounce fading. (3) BCH short setup pending rejection confirmation. Real positions verified empty - BCH long concern from prior cycle appears resolved. No intel data available.",
   "decisions": [
     {
-      "id": "DS-DEC-001",
-      "type": "emergency_close",
-      "target": "BCHUSDT_LONG_REAL",
+      "id": "D01",
+      "target": "rsi_meanrev_paper",
       "action": "close",
-      "reason": "BCH LONG 2.381@$375.81(75x) liq at $372.85 only $2.97(0.79%) away. BCH 24h range $348-$414=17.5% volatility. Unacceptable risk. Previous close command partially executed(3.193->2.381) but didn't fully close. Force full market close via API.",
+      "detail": "DOGE LONG 1869.86@$0.10696. Current $0.10556. 3rd close command. ESCALATED priority. Execute SELL market 1869.86 DOGE.",
       "urgency": "critical"
     },
     {
-      "id": "DS-DEC-002",
-      "type": "close_position",
-      "target": "rsi_meanrev_paper_DOGE_LONG",
-      "action": "close",
-      "reason": "DOGE LONG 1869.86@$0.10696 still open despite v10 close instruction. DOGE -4.74% weakest coin. Close immediately.",
-      "urgency": "high"
-    },
-    {
-      "id": "DS-DEC-003",
-      "type": "hold_position",
-      "target": "combo31_paper_BTC_ETH_SOL_SHORTS",
+      "id": "D02",
+      "target": "combo31_paper",
       "action": "hold",
-      "reason": "BTC SHORT@$77,138(-0.45% unrealized), ETH SHORT@$2,120(-1.32%), SOL SHORT@$85.06(-0.39%). Directionally correct in bearish regime. Bounce is short-covering not reversal. BTC rejected at $78K confirms resistance.",
-      "urgency": "medium"
+      "detail": "BTC/ETH/SOL shorts. All near breakeven after bounce. BTC rejection at $78K confirms bearish continuation. Bounce fading.",
+      "urgency": "normal"
     },
     {
-      "id": "DS-DEC-004",
-      "type": "hold_position",
-      "target": "futures_paper_ETH_SHORT",
+      "id": "D03",
+      "target": "futures_paper",
       "action": "hold",
-      "reason": "ETH SHORT@$2,112.31, ~$33 unrealized loss. ETH bounced $2,091->$2,148(+2.7%). Downtrend intact. Hold. Consider adding at $2,170-2,180 if bearish rejection confirmed.",
-      "urgency": "medium"
+      "detail": "ETH short @$2,112.31, -1.26% underwater. Downtrend intact. Hold. Consider add at $2,170+ with rejection.",
+      "urgency": "normal"
     },
     {
-      "id": "DS-DEC-005",
-      "type": "wait",
+      "id": "D04",
       "target": "meanrevert_paper",
       "action": "wait",
-      "reason": "No position, $1,003 cash. Bearish regime. No mean reversion longs in downtrend.",
+      "detail": "No longs in bearish regime. $1,003 cash ready when regime flips.",
       "urgency": "low"
     },
     {
-      "id": "DS-DEC-006",
-      "type": "setup_monitoring",
-      "target": "BCH_SHORT_CONTRACT",
-      "action": "watch",
-      "reason": "BCH short setup: Bounce $348->$376(+8%) fading. Wait for bearish rejection at $378-382 zone. Entry on bearish engulfing or long-wick rejection. Stop $390, TP $340.",
+      "id": "D05",
+      "target": "contract",
+      "action": "wait",
+      "detail": "BCH short pending $378-382 rejection confirmation. Do not pre-empt.",
       "urgency": "low"
     },
     {
-      "id": "DS-DEC-007",
-      "type": "regime_confirmation",
-      "target": "market_regime",
-      "action": "set_bearish",
-      "reason": "All 6 major coins negative, BTC failing $78K, BCH distribution pattern(109K volume anomaly), DOGE accelerating lower. No reversal signals anywhere.",
-      "urgency": "high"
+      "id": "D06",
+      "target": "regime",
+      "action": "confirm_bearish",
+      "detail": "All 6 coins negative. BTC failed $78K. Keep bearish regime. No long bias anywhere.",
+      "urgency": "normal"
     }
   ],
-  "intel_used": "No intel data available(intel.json empty). Advisory confirms bearish with short advice.",
-  "risk_metrics": {
-    "real_money_at_risk": 11.48,
-    "paper_money_at_risk": 488.0,
-    "max_leverage_position": 75,
-    "closest_liquidation_pct": 0.79,
-    "daily_loss_vs_limit": "3.96/5.00 (79%)"
+  "risk_flags": {
+    "daily_loss_vs_limit": "-$3.99/$5.00 (79.8% of limit used)",
+    "bch_volatility": "17.5% daily range - monitor for liquidation cascade risk",
+    "doge_long_stuck": "3rd cycle unable to close DOGE long - potential paper engine bug"
   }
 }
