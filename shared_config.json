@@ -4,8 +4,8 @@
     "MAX_LEVERAGE": 20,
     "MARGIN_PER_TRADE": 30,
     "MAX_DAILY_TRADES": 5,
-    "direction_focus": "NONE",
-    "other": "\u5f3a\u5236\u8bbe\u7f6e\u6b62\u635f\uff0c\u5355\u7b14\u4e8f\u635f\u4e0d\u8d85\u8fc72%\uff1b\u6bcf\u65e5\u4ea4\u6613\u4e0a\u96505\u7b14\uff1b\u964d\u4f4e\u6760\u6746\u81f320\u500d\uff1b\u6bcf\u7b14\u4fdd\u8bc1\u91d130\u7f8e\u5143"
+    "direction_focus": "SHORT",
+    "other": "\u5f3a\u5236\u8bbe\u7f6e\u6b62\u635f\uff0c\u6bcf\u7b14\u4ea4\u6613\u5fc5\u987b\u5e26\u6b62\u635f\uff1b\u964d\u4f4e\u6760\u6746\u81f320\u500d\u4ee5\u4e0b\uff1b\u6bcf\u65e5\u4ea4\u6613\u4e0a\u96505\u7b14\uff0c\u8d85\u8fc7\u5219\u9501\u4ed3"
   },
-  "last_retro": "2026-05-18T23:42:15.503771"
+  "last_retro": "2026-05-19T00:01:30.221949"
 }

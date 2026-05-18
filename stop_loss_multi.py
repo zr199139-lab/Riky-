@@ -21,8 +21,8 @@ BASE = 'https://fapi.binance.com'
 WSS = 'wss://fstream.binance.com/ws'
 LOG_FILE = '/home/admin/charon/stop_loss_multi.log'
 
-DEFAULT_STOP_PCT = 2.0
-DEFAULT_TRAIL_PCT = 0.0  # 关掉追踪止盈
+DEFAULT_STOP_PCT = 5.0         # 5%硬止损——给趋势验证留空间，避免噪音级扫损
+DEFAULT_TRAIL_PCT = 0.0       # 追踪止盈永久禁用（盯盘由主权AI负责）
 
 # ── 全局状态（线程间共享）──
 positions_lock = threading.Lock()

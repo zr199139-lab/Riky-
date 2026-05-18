@@ -1,59 +1,64 @@
 {
-  "time": "2026-05-18T23:46:00",
-  "epoch": 1779119160,
+  "time": "2026-05-19T00:01:43",
+  "epoch": 1779120103,
   "analysis_summary": {
     "regime": "bearish",
-    "total_equity_usd": 317.39,
-    "total_pnl": -12.97,
+    "total_equity_usd": 317.37,
+    "total_pnl": -12.82,
     "pnl_status": "loss",
-    "live_positions": 0,
+    "live_positions": 1,
+    "live_position_detail": "BTC SHORT 0.007 @ $76,327.8, 20x, +$0.147 uPnL, liq $79,792",
     "paper_strategies_with_positions": ["combo31_paper", "futures_paper"],
-    "btc_price": 76322.09,
-    "btc_24h_change_pct": -2.191,
-    "market_assessment": "BTC $76,322 weak bounce from $76,051 low — failed to reach $76,550 reversal confirmation. Bearish structure intact. Volume declining 45% from session peak. 70/30 breakdown/bounce probability. BCH -9.8%, DOGE -5.96%, ETH -3.59% all confirming bearish momentum. No intel signals detected.",
-    "key_risk": "BTC still at $76K decision point. If breaks below $76K, cascade to $74K-$75K. Contract trading still paused — 3 infrastructure fixes pending."
+    "btc_price": 76329.59,
+    "btc_24h_change_pct": -2.259,
+    "market_assessment": "BTC $76,329 flat since last check 15min ago — bounced from $76,051 low but still below $76,550 reversal confirmation. Bearish structure intact with no improvement. BCH -9.82% continues hemorrhaging — broad altcoin destruction. Volume declining 45% from session peak. Probability shifted from 70/30 to 75/25 breakdown/bounce — BCH massacre adds bearish conviction. Live BTC SHORT now active (0.007 @ $76,327.8, profitable). Contract trading remains paused for new entries.",
+    "key_risk": "BTC $76K decision point. If break below = cascade. BCH -9.82% signals possible contagion. Live BTC short is small and safe (liq at $79,792) but cannot add to it. Contract fixes still pending."
   },
   "decisions": [
     {
       "target": "shared_config",
-      "action": "updated_to_v21",
+      "action": "updated_to_v22",
       "changes": [
-        "Probability shifted from 65/35 to 70/30 breakdown/bounce — failed bounce reduces bounce probability",
-        "combo31_paper: tightened trail triggers — weak bounce means closer stop for reduce signals",
-        "All other strategies: no parameter changes — current settings appropriate for bearish regime",
-        "Contract trading: remains paused, no ETA change"
+        "Probability shifted from 70/30 to 75/25 breakdown/bounce — BCH -9.82% adds bearish conviction",
+        "Acknowledged live BTC SHORT 0.007 @ $76,327.8 (grandfathered, profitable, safe)",
+        "max_positions updated from 0 to 1 to reflect existing live position",
+        "combo31_paper: no parameter changes — all 3 shorts profitable in bearish regime",
+        "futures_paper: no parameter changes — ETH short profitable, approaching $2,091 wedge",
+        "meanrevert_paper: added BCH bloodbath reasoning against catching falling knife",
+        "Contract trading: remains paused for new entries, existing position grandfathered",
+        "No new trading signals detected — intel empty, advisory confirms bearish"
       ]
+    },
+    {
+      "target": "live_btc_short",
+      "action": "hold",
+      "reason": "0.007 BTC SHORT @ $76,327.8, mark $76,306.8, +$0.147 uPnL. Liq at $79,792 (safe at 20x). Small position, profitable, no reason to close. Do not add — contract trading paused for new entries."
     },
     {
       "target": "combo31_paper",
       "action": "hold_trail",
-      "reason": "3 shorts all in profit. BTC failed bounce confirms bearish pressure. Hold with updated trail: reduce 25% at $76,550, close 50% at $76,800. Add trigger at $75,800 if slow bleed below $76K."
+      "reason": "3 shorts all increasingly profitable. BTC short +$832/tick +10.8%, ETH short +$15 +9.4%, SOL short +$6.47 +5.1%. BCH -9.82% confirms broad bearish. Trail unchanged: reduce 25% at $76,550 bounce, close 50% at $76,800, add 0.05x at $75,800 if slow bleed below $76K."
     },
     {
       "target": "futures_paper",
       "action": "hold",
-      "reason": "ETH short in profit. Approaching $2,091 wedge. If break below with volume = hold for $2,050. No change from v20."
+      "reason": "ETH short at $2,112.31, current $2,105, +$6.92 unrealized. Approaching $2,091 wedge support. BCH bloodbath suggests ETH may follow if $2,091 breaks."
     },
     {
       "target": "meanrevert_paper",
       "action": "wait",
-      "reason": "No mean reversion setup. Bearish grind invalidates oversold bounces."
+      "reason": "No mean reversion setup. BCH -9.82% is a warning — mean reversion on crashing altcoins is a losing game."
     },
     {
       "target": "rsi_meanrev_paper",
       "action": "wait",
-      "reason": "DOGE -5.96% still weakest. RSI_oversold=13 correctly blocks premature entry."
+      "reason": "DOGE -6.05% weakest. RSI_oversold=13 correctly blocks premature entry. BCH precedent shows alts can go much further down."
     },
     {
       "target": "contract_trading",
-      "action": "paused",
-      "reason": "3 infrastructure fixes still pending from BCH 50x near-liquidation incident. No live contract positions."
-    },
-    {
-      "target": "live_trading",
-      "action": "no_action",
-      "reason": "0 live positions. No changes needed. Contract paused."
+      "action": "paused_for_new_entries",
+      "reason": "3 infrastructure fixes still pending. Existing BTC SHORT (0.007) is grandfathered — profitable and safe. No new contract positions until stop_loss_multi.py, volatility leverage cap, and pre-deployment safety check are verified."
     }
   ],
-  "intel_assessment": "No intel data available — intel.json empty/missing. No whale movements or news signals to factor."
+  "intel_assessment": "No intel data available — intel.json empty/missing. No whale movements or news signals. Advisory from 19:16 confirms bearish regime: '集中火力做空高波动品种' (concentrate on shorting high-volatility coins). No contradictory signals."
 }

@@ -32,12 +32,51 @@ AIPRO_KEY = "sk-BLzmIrUAOsZOpwUPf1IuILbxnyaq0bitkntL3aHiEIO29mtL"
 DS_KEY = "sk-1c97d4d658704f9cae7f998eb8fdb43b"
 
 # ── 参数（daily_retro会覆写这些）──
-MAX_LEVERAGE = 20
-MARGIN_PER_TRADE = 30       # 每单保证金$30
-DEFAULT_STOP_PCT = 2.0       # 固定止损2%
-MAX_POSITIONS = 3             # 最多同时3仓
-DAILY_LOSS_LIMIT = -15.0      # 日亏$15熔断
-MIN_TRADE_INTERVAL = 1800     # 同一币种最小交易间隔30分钟
+MAX_LEVERAGE = 5               # 默认5x，按币种动态调整
+MARGIN_PER_TRADE = 30          # 每单固定保证金$30（不按百分比）
+DEFAULT_STOP_PCT = 5.0         # 默认止损5%，给趋势验证留空间
+MAX_POSITIONS = 3              # 最多同时3仓
+DAILY_LOSS_LIMIT = -15.0       # 日亏$15熔断
+MIN_TRADE_INTERVAL = 1800      # 同一币种最小交易间隔30分钟
+
+# ── Jane Street级别动态杠杆矩阵 ──
+LEVERAGE_MATRIX = {
+    # 币种前缀: (推荐杠杆, 止损百分比)
+    'BTC': (5, 5.0),
+    'ETH': (5, 5.0),
+    'SOL': (2, 8.0),
+    'BCH': (2, 8.0),
+    'DOGE': (2, 8.0),
+    'PEPE': (1, 10.0),
+    'XRP': (3, 6.0),
+    'ADA': (2, 8.0),
+    'DOT': (2, 8.0),
+    'LINK': (3, 6.0),
+    'AVAX': (2, 8.0),
+    'UNI': (2, 8.0),
+    'ATOM': (2, 8.0),
+}
+DEFAULT_LEVERAGE = (3, 6.0)    # 未匹配币种默认3x/6%
+
+# ── 铁律：全仓模式永久禁用 ──
+CROSS_MARGIN_FORBIDDEN = True
+
+def get_leverage_for_symbol(symbol):
+    """基于标的物的动态杠杆配置"""
+    for prefix, (lev, stop) in LEVERAGE_MATRIX.items():
+        if symbol.startswith(prefix):
+            return lev, stop
+    return DEFAULT_LEVERAGE
+
+def fee_check_passes(margin, leverage):
+    """手续费防御：单边taker费超过保证金的2%则拒绝开仓"""
+    taker_rate = 0.0004  # Binance VIP0 taker费率0.04%（用实际值）
+    nominal = margin * leverage
+    fee = nominal * taker_rate
+    fee_ratio = fee / margin * 100 if margin > 0 else 100
+    if fee_ratio > 2.0:
+        return False, f'手续费{fee_ratio:.1f}%超限(>{2.0}%)'
+    return True, f'手续费{fee_ratio:.2f}%✅'
 
 # ── 辅助 ──
 def log(msg):
@@ -358,9 +397,20 @@ def execute_trade(signal, market):
     side = 'BUY' if is_long else 'SELL'
     position_side = 'LONG' if is_long else 'SHORT'
     
-    # 计算数量
-    leverage = min(signal.get('leverage', MAX_LEVERAGE), MAX_LEVERAGE)
+    # 动态杠杆配置（基于标的物）
+    target_leverage, dynamic_stop = get_leverage_for_symbol(symbol)
+    leverage = min(target_leverage, signal.get('leverage', MAX_LEVERAGE))
+    leverage = max(1, int(leverage))  # 至少1x
+    
     margin = min(MARGIN_PER_TRADE, market['available'] * 0.8)
+    
+    # 手续费防御检查
+    fee_ok, fee_msg = fee_check_passes(margin, leverage)
+    if not fee_ok:
+        log(f'FEE_REJECT {symbol}: {fee_msg} ({leverage}x/${margin:.0f})')
+        return
+    log(f'  动态杠杆: {leverage}x | 止损: {dynamic_stop}% | {fee_msg}')
+    
     price = None
     
     # 获取当前价格
