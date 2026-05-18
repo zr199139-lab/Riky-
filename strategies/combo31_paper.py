@@ -9,7 +9,7 @@ import os, json, time, logging, numpy as np, ccxt
 from datetime import datetime
 import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from shared_config import load_strategy_params, get_risk_limits
+from shared_config import load_strategy_params, get_risk_limits, get_regime
 
 STRATEGY_NAME = "combo31_paper"
 SYMBOLS      = ["BTC/USDT", "ETH/USDT", "SOL/USDT"]
@@ -154,9 +154,15 @@ while True:
             
             # 开仓
             if not in_pos and abs(signal) > 0.8:
+                regime = get_regime()
+                raw_side = "long" if signal > 0 else "short"
+                # 方向锁: bearish→只做空, bullish→只做多
+                if (regime == 'bearish' and raw_side == 'long') or (regime == 'bullish' and raw_side == 'short'):
+                    log.info(f'[DIRLOCK] {regime} 方向锁阻塞{raw_side.upper()} {sym} signal={signal:.2f}')
+                    continue
+                side = raw_side
                 margin = state["cash"] * POSITION_PCT
                 qty = margin * LEVERAGE / price
-                side = "long" if signal > 0 else "short"
                 fee = qty * price * TAKER_FEE
                 state["fees_paid"] = state.get("fees_paid", 0) + fee
                 state["cash"] -= margin + fee

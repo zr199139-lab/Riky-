@@ -22,7 +22,7 @@ from datetime import datetime
 import statistics
 import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from shared_config import load_strategy_params, get_risk_limits
+from shared_config import load_strategy_params, get_risk_limits, get_regime
 
 LOG_FILE = os.path.expanduser('~/charon/bot_logs/meanrevert_paper.log')
 STATE_FILE = os.path.expanduser('~/charon/bot_logs/meanrevert_paper_state.json')
@@ -93,9 +93,12 @@ while True:
             RSI_OVERBOUGHT = gp.get('rsi_overbought', RSI_OVERBOUGHT)
             POSITION_PCT = gp.get('position_pct', POSITION_PCT)
             hl_atr = gp.get('stop_loss_atr', 1.5)
-            if gp.get('active') == False:
-                log('[GPT] 策略暂停指令, 跳过本轮')
-                time.sleep(300); continue
+        
+        # 读取周期方向锁
+        regime = get_regime()
+        # bearish→只做空, bullish→只做多, sideways→双向
+        direction_lock = 'short' if regime == 'bearish' else ('long' if regime == 'bullish' else None)
+        log(f'[REGIME] {regime} | 方向锁={"无限制" if not direction_lock else direction_lock.upper()}')
         
         klines = fetch_klines(SYMBOL, 100)
         if not klines: continue
@@ -153,10 +156,10 @@ while True:
                 state['position'] = None
                 continue
         
-        # 开仓信号
+        # 开仓信号（受方向锁约束）
         if not in_pos and lower is not None:
-            # 做多: 触BB下轨 + RSI超卖
-            if price <= lower * 1.005 and rsi < RSI_OVERSOLD:
+            # 做多: 触BB下轨 + RSI超卖 (方向锁不能是short才做多)
+            if (direction_lock != 'short') and price <= lower * 1.005 and rsi < RSI_OVERSOLD:
                 qty = state['cash'] * POSITION_PCT / price
                 cost = qty * price
                 fee = cost * TAKER_FEE  # 开仓手续费
@@ -165,8 +168,8 @@ while True:
                 state['position'] = {'entry': price, 'qty': qty, 'side': 'long', 'time': time.time()}
                 log(f'[OPEN] LONG {SYMBOL} {qty:.4f} @ {price:.2f} RSI={rsi:.1f} BB下轨={lower:.2f} 手续费=${fee:.4f}')
             
-            # 做空: 触BB上轨 + RSI超买
-            elif price >= upper * 0.995 and rsi > RSI_OVERBOUGHT:
+            # 做空: 触BB上轨 + RSI超买 (方向锁不能是long才做空)
+            if (direction_lock != 'long') and price >= upper * 0.995 and rsi > RSI_OVERBOUGHT:
                 qty = state['cash'] * POSITION_PCT / price
                 cost = qty * price
                 fee = cost * TAKER_FEE

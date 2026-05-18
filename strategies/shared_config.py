@@ -52,6 +52,14 @@ def get_risk_limits():
     except:
         return {}
 
+def get_regime():
+    """读取硬规则周期判断"""
+    try:
+        config = get_config()
+        return config.get('regime', 'unknown')  # regime is now hard-coded, not GPT-parsed
+    except:
+        return 'unknown'
+
 def get_config():
     global LAST_MTIME, CACHE
     try:

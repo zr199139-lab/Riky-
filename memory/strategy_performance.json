@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-05-18T08:07:05Z",
+  "timestamp": "2026-05-18T11:16:01Z",
   "strategies": {
     "combo31_paper": {
       "pnl": 0.0,
@@ -7,16 +7,25 @@
       "cash": 512.0,
       "fees_paid": 0,
       "has_position": true,
-      "updated_at": "2026-05-18T08:07:05Z"
+      "updated_at": "2026-05-18T11:16:01Z"
+    }
+,
+    "contract_executor": {
+      "pnl": 0,
+      "trades": 1,
+      "cash": 1000,
+      "fees_paid": 0,
+      "has_position": false,
+      "updated_at": "2026-05-18T11:16:01Z"
     }
 ,
     "futures_paper": {
-      "pnl": 0.0,
+      "pnl": -5.39,
       "trades": 0,
       "cash": 600.0,
       "fees_paid": 0,
       "has_position": true,
-      "updated_at": "2026-05-18T08:07:05Z"
+      "updated_at": "2026-05-18T11:16:01Z"
     }
 ,
     "macd_rsi_paper": {
@@ -25,7 +34,7 @@
       "cash": 1000.0,
       "fees_paid": 0,
       "has_position": false,
-      "updated_at": "2026-05-18T08:07:05Z"
+      "updated_at": "2026-05-18T11:16:01Z"
     }
 ,
     "macd_trend_paper": {
@@ -34,7 +43,7 @@
       "cash": 1000.0,
       "fees_paid": 0,
       "has_position": false,
-      "updated_at": "2026-05-18T08:07:05Z"
+      "updated_at": "2026-05-18T11:16:01Z"
     }
 ,
     "meanrevert_paper": {
@@ -43,7 +52,7 @@
       "cash": 700.0,
       "fees_paid": 0,
       "has_position": true,
-      "updated_at": "2026-05-18T08:07:05Z"
+      "updated_at": "2026-05-18T11:16:01Z"
     }
 ,
     "pairs_paper": {
@@ -52,7 +61,7 @@
       "cash": 1000.0,
       "fees_paid": 0,
       "has_position": false,
-      "updated_at": "2026-05-18T08:07:05Z"
+      "updated_at": "2026-05-18T11:16:01Z"
     }
 ,
     "rsi_meanrev_paper": {
@@ -61,7 +70,7 @@
       "cash": 800.0,
       "fees_paid": 0,
       "has_position": true,
-      "updated_at": "2026-05-18T08:07:05Z"
+      "updated_at": "2026-05-18T11:16:01Z"
     }
 ,
     "spot_executor": {
@@ -70,7 +79,7 @@
       "cash": 1000,
       "fees_paid": 0,
       "has_position": false,
-      "updated_at": "2026-05-18T08:07:05Z"
+      "updated_at": "2026-05-18T11:16:01Z"
     }
 ,
     "turtle_paper": {
@@ -79,7 +88,7 @@
       "cash": 1000.0,
       "fees_paid": 0,
       "has_position": false,
-      "updated_at": "2026-05-18T08:07:05Z"
+      "updated_at": "2026-05-18T11:16:01Z"
     }
   }
 }

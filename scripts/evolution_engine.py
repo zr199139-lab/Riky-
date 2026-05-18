@@ -103,81 +103,69 @@ def gpt_evolve(data):
     else:
         binance_summary = "\n  暂无币安数据"
     
-    prompt = f"""你是暗黑星火资本CEO，全托管模式。铁律只有一条：赚钱。其他都是扯淡。
+    # 硬规则周期判断（不交给GPT）
+    prices = data.get('market_prices', {})
+    btc_price = prices.get('BTC/USDT', {}).get('last', 0)
+    btc_chg = prices.get('BTC/USDT', {}).get('change', 0) or 0
+    if btc_chg < -2: hard_regime = 'bearish'
+    elif btc_chg > 2: hard_regime = 'bullish'
+    else: hard_regime = 'sideways'
 
-=== 4虚拟盘状态 ===
-{perf_summary if perf_summary else '  全部idle, 0交易'}
+    prompt = f"""你是暗黑星火资本CEO。赚钱活下去是你的本能。禁止犹豫、禁止hold、禁止空仓等死。
 
-=== 币安5月真实历史 ===
+=== 硬规则周期判断（不可改变）===
+BTC 24h变化: {btc_chg:+.2f}%
+当前周期: {hard_regime.upper()}
+→ 周期决定方向：bearish必须做空 || bullish必须做多 || sideways可做空也可做多
+
+=== 虚拟盘状态 ===
+{perf_summary if perf_summary else '全部idle'}
+
+=== 币安历史 ===
 {binance_summary}
 
-=== 当前市场价格(用于计算买入卖出价) ===
-{json.dumps(data.get('market_prices', {}), indent=2)}
+=== 当前价格 ===
+{json.dumps(prices, indent=2)}
 
-=== 历史教训(喂给进化用) ===
-- 用户自己操作=赚钱(BTC+$92, AVNT+$20, RUNE+$17)
-- AI自作主张=全亏(5月净-$462, AIGENSYN单币亏-$241)
-- 手续费$80是确定亏损, 高频交易=慢性自杀
-- 熊市做空赚钱, 做多亏钱
-- 主流币(BTC/ETH/SOL/DOGE)有流动性, 小币一买就套
+你的任务：
+1. 周期={hard_regime} → 方向已锁定，不能选hold/观望
+2. 为4个虚拟盘调参数（RSI阈值/仓位比例/止损），让它们按方向交易
+3. 如果有合适机会，给$50合约执行器下单指令
+4. 如果行情不适合开仓，就设更严格的参数等机会，但不能hold不动
 
-|你的任务: 分析所有数据, 为4个虚拟盘、$250现货执行器和$50合约执行器生成最优参数。
-不要保守。有信号就干, 没信号就等。
-要赌就赌大的, 但不赌就是最稳的赚。
-美国时间周一到周五波动最大。
+记住：不交易就没有利润数据，没有数据就无法进化。hold是慢性死亡。
 
-$250现货执行器说明:
-- 资金: $250 USDT 币安现货账户
-- 选币: ETH/DOGE/SOL 三个主流币
-- 策略: 挂限价单等深度回调(低于现价8-15%), 等明显反弹再出
-- 不是网格, 低频, 每单目标赚$10-25
-- 空仓时可挂2-3个限价单等触发
-- 持仓后等反弹到目标出, 然后重新挂单
-
-$50合约执行器说明(新增):
-- 资金: $50 USDT 币安合约账户
-- 方向: 熊市做空为主(历史验证), 牛市做多
-- 杠杆: 5-10x, $50×10x=$500名义
-- 单笔止损: -$3(本金的6%)
-- 日亏上限: -$10(本金的20%)
-- 止盈: +$5-15/单
-- 只做ETH/BTC/SOL, 不做小币
-- 不扛单, 到止损就砍
-
-输出JSON格式:
-{{{{"market": "bullish/bearish/sideways(一句话理由)",
+输出JSON格式：
+{{{{"market": "{hard_regime}(你的分析理由)",
   "strategies": {{{{
-    "meanrevert_paper": {{{{"active": true/false,"rsi_oversold": 整数,"rsi_overbought": 整数,"position_pct": 浮点数,"action": "hold/open/close"}}}},
-    "rsi_meanrev_paper": {{{{"active": true/false,"rsi_oversold": 整数,"rsi_overbought": 整数,"position_pct": 浮点数,"action": "hold/open/close"}}}},
-    "combo31_paper": {{{{"active": true/false,"leverage": 整数,"position_pct": 浮点数,"action": "hold/open/close"}}}},
-    "futures_paper": {{{{"active": true/false,"leverage": 整数,"position_pct": 浮点数,"action": "hold/open/close"}}}}
+    "meanrevert_paper": {{{{"rsi_oversold": 整数10-30,"rsi_overbought": 整数50-80,"position_pct": 浮点数0.1-0.5,"action": "open/close"}}}},
+    "rsi_meanrev_paper": {{{{"rsi_oversold": 整数10-30,"rsi_overbought": 整数50-80,"position_pct": 浮点数0.1-0.5,"action": "open/close"}}}},
+    "combo31_paper": {{{{"leverage": 整数1-5,"position_pct": 浮点数0.1-0.5,"action": "open/close"}}}},
+    "futures_paper": {{{{"leverage": 整数1-5,"position_pct": 浮点数0.1-0.5,"action": "open/close"}}}}
   }}}},
   "spot_execution": {{{{
     "active": true/false,
-    "budget_usdt": 250,
     "orders": [
       {{{{ "symbol": "ETH/USDT", "buy_below": 价格, "sell_at": 价格, "allocation": USDT数额 }}}},
-      {{{{ "symbol": "DOGE/USDT", "buy_below": 价格, "sell_at": 价格, "allocation": USDT数额 }}}},
-      {{{{ "symbol": "SOL/USDT", "buy_below": 价格, "sell_at": 价格, "allocation": USDT数额 }}}}
+      {{{{ "symbol": "SOL/USDT", "buy_below": 价格, "sell_at": 价格, "allocation": USDT数额 }}}},
+      {{{{ "symbol": "DOGE/USDT", "buy_below": 价格, "sell_at": 价格, "allocation": USDT数额 }}}}
     ]
   }}}},
   "contract": {{{{
     "active": true/false,
     "symbol": "币种/USDT",
     "direction": "long/short/none",
-    "leverage": 整数5-10,
-    "entry_type": "market/limit",
-    "entry_price": 入场价格限价时用,
+    "leverage": 5-10,
+    "margin_usdt": 整数10-50,
     "stop_loss_price": 止损价,
     "take_profit_price": 止盈价,
-    "margin_usdt": 保证金数额(最大50),
-    "reason": "一句话决策理由"
+    "reason": "决策理由"
   }}}},
   "risk": {{{{
-    "daily_loss_limit": 浮点数,
-    "max_open_positions": 整数,
+    "daily_loss_limit": 浮点数3-10,
+    "max_positions": 整数1-3,
     "advice": "一句话建议"
-    }}}}
+  }}}}
 }}
 """
     try:
@@ -206,34 +194,33 @@ $50合约执行器说明(新增):
         return None
 
 # ── Step 3: 写配置 ──
-def apply_decision(decision):
-    """写shared_config + advisory"""
+def apply_decision(decision, hard_regime='unknown'):
+    """写shared_config + advisory，方向由硬规则强制"""
     if not decision:
         return False
     
     config = {
         'updated_at': datetime.now().isoformat(),
-        'market_assessment': decision.get('market', 'unknown'),
+        'market_assessment': f"{hard_regime}: {decision.get('market', '')}",
+        'regime': hard_regime,  # 硬规则，不依赖GPT文本
         'risk_control': {
             'daily_loss_limit': decision.get('risk', {}).get('daily_loss_limit', 5.0),
-            'max_positions': decision.get('risk', {}).get('max_open_positions', 2),
+            'max_positions': decision.get('risk', {}).get('max_positions', 2),
             'urgent_advice': decision.get('risk', {}).get('advice', ''),
         },
         'strategies': decision.get('strategies', {}),
         'spot_execution': decision.get('spot_execution', {}),
         'contract': decision.get('contract', {}),
-        'version': 3
+        'version': 4  # bumped: hard regime enforcement
     }
     json.dump(config, open(LOGS / 'shared_config.json', 'w'), indent=2)
     log(f'[CONFIG] 已更新: 市场={config["market_assessment"]}')
     
     advisory = {
         'time': datetime.now().isoformat(),
-        'regime': 'bear' if 'bear' in decision.get('market','').lower() 
-                  else 'bull' if 'bull' in decision.get('market','').lower() 
-                  else 'sideways',
+        'regime': hard_regime,  # 硬规则
         'advice': decision.get('risk', {}).get('advice', ''),
-        'pause': any(not s.get('active', True) for s in decision.get('strategies', {}).values())
+        'pause': False
     }
     json.dump(advisory, open(LOGS / 'advisory.json', 'w'), indent=2)
     log(f'[ADVISORY] 已同步')
@@ -254,6 +241,14 @@ if __name__ == '__main__':
     nt = data.get('binance_may', {}).get('total_trades', 0)
     log(f'  {ns}个策略状态, {nt}笔币安历史交易')
     
+    # 硬规则周期判断
+    prices = data.get('market_prices', {})
+    btc_chg = prices.get('BTC/USDT', {}).get('change', 0) or 0
+    if btc_chg < -2: hard_regime = 'bearish'
+    elif btc_chg > 2: hard_regime = 'bullish'
+    else: hard_regime = 'sideways'
+    log(f'  BTC 24h={btc_chg:+.2f}% → 硬规则周期={hard_regime.upper()}')
+    
     # Step 3: GPT进化决策
     log('[2/4] GPT分析+决策...')
     decision = gpt_evolve(data)
@@ -268,7 +263,7 @@ if __name__ == '__main__':
     
     # Step 4: 应用配置
     log('[3/4] 更新配置...')
-    apply_decision(decision)
+    apply_decision(decision, hard_regime)
     
     # Step 5: Git提交
     log('[4/4] Git提交...')

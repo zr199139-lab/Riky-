@@ -1,7 +1,7 @@
 [
 {"signal": "idle", "source": "combo31_paper", "value": 0, "desc": "0交易0盈亏"}
 ,
-{"signal": "idle", "source": "futures_paper", "value": 0, "desc": "0交易0盈亏"}
+{"signal": "unstable", "source": "futures_paper", "value": -5.39, "desc": "亏损>5USDT"}
 ,
 {"signal": "idle", "source": "macd_rsi_paper", "value": 0, "desc": "0交易0盈亏"}
 ,

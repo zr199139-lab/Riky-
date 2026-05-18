@@ -3,8 +3,14 @@
 import json, urllib.request, sys
 
 # Read status first
-with open('/root/charon/ds0_status.json') as f:
-    status = json.load(f)
+try:
+    with open('/root/charon/ds0_status.json') as f:
+        status = json.load(f)
+except (FileNotFoundError, PermissionError):
+    import os
+    home = os.path.expanduser('~')
+    with open(f'{home}/charon/ds0_status.json') as f:
+        status = json.load(f)
 
 # Get live price
 try:

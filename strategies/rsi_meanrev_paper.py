@@ -11,7 +11,7 @@ import os, json, time, logging, numpy as np, ccxt
 from datetime import datetime
 import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from shared_config import load_strategy_params, get_risk_limits
+from shared_config import load_strategy_params, get_risk_limits, get_regime
 
 STRATEGY_NAME = "rsi_meanrev_paper"
 SYMBOL        = "DOGE/USDT"
@@ -131,15 +131,25 @@ while True:
             fee_open = capital * TAKER_FEE
             
             if rsi < RSI_OS:
-                state["fees_paid"] = state.get("fees_paid", 0) + fee_open
-                state["cash"] -= capital + fee_open
-                state["position"] = {"entry": price, "qty": qty, "side": "long", "time": time.time()}
-                log.info(f"[OPEN] LONG {qty:.2f} @ ${price:.4f} RSI={rsi:.1f} 手续费=${fee_open:.4f}")
+                # 方向锁: bearish下不做多
+                regime = get_regime()
+                if regime == 'bearish':
+                    log.info(f'[DIRLOCK] bearish 方向锁阻塞LONG, RSI={rsi:.1f}')
+                else:
+                    state["fees_paid"] = state.get("fees_paid", 0) + fee_open
+                    state["cash"] -= capital + fee_open
+                    state["position"] = {"entry": price, "qty": qty, "side": "long", "time": time.time()}
+                    log.info(f"[OPEN] LONG {qty:.2f} @ ${price:.4f} RSI={rsi:.1f} 手续费=${fee_open:.4f}")
             elif rsi > RSI_OB:
-                state["fees_paid"] = state.get("fees_paid", 0) + fee_open
-                state["cash"] -= capital + fee_open
-                state["position"] = {"entry": price, "qty": qty, "side": "short", "time": time.time()}
-                log.info(f"[OPEN] SHORT {qty:.2f} @ ${price:.4f} RSI={rsi:.1f} 手续费=${fee_open:.4f}")
+                # 方向锁: bullish下不做空
+                regime = get_regime()
+                if regime == 'bullish':
+                    log.info(f'[DIRLOCK] bullish 方向锁阻塞SHORT, RSI={rsi:.1f}')
+                else:
+                    state["fees_paid"] = state.get("fees_paid", 0) + fee_open
+                    state["cash"] -= capital + fee_open
+                    state["position"] = {"entry": price, "qty": qty, "side": "short", "time": time.time()}
+                    log.info(f"[OPEN] SHORT {qty:.2f} @ ${price:.4f} RSI={rsi:.1f} 手续费=${fee_open:.4f}")
         
         equity = state["cash"]
         if state.get("position"):
