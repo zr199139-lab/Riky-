@@ -1,54 +1,49 @@
 {
-  "time": "2026-05-18T21:30:14",
-  "epoch": 1779111014,
-  "analysis_summary": "Full deep analysis triggered by loss status($-3.99). Market bearish: all 6 coins negative. BTC failed $78K resistance. BCH -8.76% biggest loser. DOGE -4.99% weakest. 3 key decisions: (1) ESCALATE DOGE long close - 3rd attempt, previous ignored. (2) Hold all combo/futures shorts - direction correct, bounce fading. (3) BCH short setup pending rejection confirmation. Real positions verified empty - BCH long concern from prior cycle appears resolved. No intel data available.",
+  "time": "2026-05-18T21:45:21",
+  "epoch": 1779111921,
+  "analysis_summary": "Bearish regime confirmed. BTC $76,801(-1.88%) rejected at $78K resistance. All 6 tracked coins negative. BCH extreme volatility 17.5% ($348-$414). DOGE weakest -6.05%. Real positions: empty. Paper: combo31 BTC/SOL shorts profitable, ETH shorts under small water. DOGE long FINALLY closed (-$4.49). rsi_meanrev_paper recovering. No intel alerts. Advisory confirms bearish: focus on shorting high-volatility, strict stops, no counter-trend bottom fishing.",
   "decisions": [
     {
-      "id": "D01",
-      "target": "rsi_meanrev_paper",
-      "action": "close",
-      "detail": "DOGE LONG 1869.86@$0.10696. Current $0.10556. 3rd close command. ESCALATED priority. Execute SELL market 1869.86 DOGE.",
-      "urgency": "critical"
+      "item": "market_regime",
+      "decision": "bearish",
+      "confidence": 0.92,
+      "reasoning": "BTC lower high at $78K failed breakout = bearish continuation. All coins negative. Bounce characteristics: short-covering, not reversal. No coin showing reversal structure."
     },
     {
-      "id": "D02",
-      "target": "combo31_paper",
-      "action": "hold",
-      "detail": "BTC/ETH/SOL shorts. All near breakeven after bounce. BTC rejection at $78K confirms bearish continuation. Bounce fading.",
-      "urgency": "normal"
+      "item": "meanrevert_paper",
+      "decision": "wait",
+      "parameter_change": "RSI oversold 25->20",
+      "reasoning": "Bearish regime - no mean reversion longs. Tightened RSI to prevent false entries. $1,003 cash safe."
     },
     {
-      "id": "D03",
-      "target": "futures_paper",
-      "action": "hold",
-      "detail": "ETH short @$2,112.31, -1.26% underwater. Downtrend intact. Hold. Consider add at $2,170+ with rejection.",
-      "urgency": "normal"
+      "item": "rsi_meanrev_paper",
+      "decision": "wait",
+      "parameter_change": "RSI oversold stays at 15",
+      "reasoning": "DOGE long finally closed at -$4.49 loss. Keep tight RSI to prevent re-entry. Strategy recovering."
     },
     {
-      "id": "D04",
-      "target": "meanrevert_paper",
-      "action": "wait",
-      "detail": "No longs in bearish regime. $1,003 cash ready when regime flips.",
-      "urgency": "low"
+      "item": "combo31_paper",
+      "decision": "hold",
+      "parameter_change": "position_pct 0.15, leverage 1.5",
+      "reasoning": "BTC short profiting (+$4.70). SOL short profiting (+$3.61). ETH short small loss (-$2.45). Bearish thesis accelerating - hold all. Net positive ~$5.86."
     },
     {
-      "id": "D05",
-      "target": "contract",
-      "action": "wait",
-      "detail": "BCH short pending $378-382 rejection confirmation. Do not pre-empt.",
-      "urgency": "low"
+      "item": "futures_paper",
+      "decision": "hold",
+      "parameter_change": "position_pct 0.25, leverage 1",
+      "reasoning": "ETH short @$2,112.31, current $2,126.5 = -$14.19 loss. Bounce from $2,091 fading. Downtrend intact. Hold. Consider add if $2,091 breaks."
     },
     {
-      "id": "D06",
-      "target": "regime",
-      "action": "confirm_bearish",
-      "detail": "All 6 coins negative. BTC failed $78K. Keep bearish regime. No long bias anywhere.",
-      "urgency": "normal"
+      "item": "BCH_contract",
+      "decision": "wait",
+      "parameter_change": "no change",
+      "reasoning": "BCH $375 after $414->$348 crash. Bounce fading but 17.5% daily range too extreme. Wait for rejection at $378-382 or breakdown below $360."
+    },
+    {
+      "item": "real_account",
+      "decision": "all_clear",
+      "parameter_change": "max_positions 0, daily_loss_limit $5",
+      "reasoning": "No real positions - correct. BTC $76,801 falling. No entry opportunity suitable for real capital."
     }
-  ],
-  "risk_flags": {
-    "daily_loss_vs_limit": "-$3.99/$5.00 (79.8% of limit used)",
-    "bch_volatility": "17.5% daily range - monitor for liquidation cascade risk",
-    "doge_long_stuck": "3rd cycle unable to close DOGE long - potential paper engine bug"
-  }
+  ]
 }
