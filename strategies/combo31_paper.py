@@ -111,16 +111,34 @@ while True:
                     log.info(f"[REVERSE] {sym} {side.upper()} 趋势反转 ${price:.2f} PnL=${pnl:.2f}")
                     continue
                 
-                # 止盈: ATR的2倍
-                tp_pct = atr_pct * 2
-                if (side == "long" and price > entry * (1 + tp_pct)) or \
-                   (side == "short" and price < entry * (1 - tp_pct)):
-                    state["cash"] += pos["margin"] + pnl / LEVERAGE
-                    state["pnl"] += pnl
-                    state["trades"] += 1
-                    del state["positions"][sym]
-                    log.info(f"[TP] {sym} {side.upper()} ${price:.2f} PnL=${pnl:.2f}")
-                    continue
+                # 分批止盈: ATR×1平50%, ATR×2平剩下50%
+                tp1_pct = atr_pct * 1.0
+                tp2_pct = atr_pct * 2.0
+                
+                # 第一批止盈 (50%)
+                if (side == "long" and price > entry * (1 + tp1_pct)) or \
+                   (side == "short" and price < entry * (1 - tp1_pct)):
+                    if pos.get("tp1_done", False):
+                        # 第二批止盈
+                        state["cash"] += pos["margin"] + pnl / LEVERAGE
+                        state["pnl"] += pnl
+                        state["trades"] += 1
+                        del state["positions"][sym]
+                        log.info(f"[TP2] {sym} {side.upper()} ${price:.2f} PnL=${pnl:.2f} 全平")
+                        continue
+                    else:
+                        # 第一批: 平50%, 留50%
+                        half_qty = qty / 2
+                        half_margin = pos["margin"] / 2
+                        pnl_half = (price - entry) * half_qty * LEVERAGE if side == "long" else (entry - price) * half_qty * LEVERAGE
+                        state["cash"] += half_margin + pnl_half / LEVERAGE
+                        state["pnl"] += pnl_half
+                        state["trades"] += 1
+                        pos["qty"] = half_qty
+                        pos["margin"] = half_margin
+                        pos["tp1_done"] = True
+                        log.info(f"[TP1] {sym} {side.upper()} ${price:.2f} PnL=${pnl_half:.2f} 留50%")
+                        continue
             
             # 开仓
             if not in_pos and abs(signal) > 0.8:
@@ -144,11 +162,24 @@ while True:
                     equity += p["margin"] + (p["entry"] - mp) * p["qty"]
             except: pass
         
+        # 资金费率采集 (每轮模拟结算)
+        if state.get("positions"):
+            for sym, p in state["positions"].items():
+                if p.get("side") == "short":
+                    try:
+                        fr = exchange.fetch_funding_rate(sym.replace("/","") + ":USDT")
+                        rate = float(fr["info"]["lastFundingRate"])
+                        if rate > 0:
+                            funding_earned = p["margin"] * rate * (LOOP_SECONDS / 28800)
+                            state["funding_collected"] = state.get("funding_collected", 0) + funding_earned
+                            p["funding_earned"] = p.get("funding_earned", 0) + funding_earned
+                    except: pass
+        
         loop += 1
         if loop % LOG_ROUNDS == 0:
-            c, t, p = state["cash"], state["trades"], state["pnl"]
+            c, t, p, fc = state["cash"], state["trades"], state["pnl"], state.get("funding_collected", 0)
             n_pos = len(state["positions"])
-            log.info(f"[STATUS] 权益=${equity:.2f} 现金=${c:.2f} 持仓={n_pos}个 交易={t} PnL=${p:.2f}")
+            log.info(f"[STATUS] 权益=${equity:.2f} 现金=${c:.2f} 持仓={n_pos}个 交易={t} PnL=${p:.2f} 费率收入=${fc:.4f}")
         
         json.dump(state, open(STATE_FILE, "w"))
         time.sleep(LOOP_SECONDS)

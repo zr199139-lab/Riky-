@@ -14,13 +14,14 @@ STRATEGY_NAME = "rsi_meanrev_paper"
 SYMBOL        = "DOGE/USDT"
 TIMEFRAME     = "1h"
 INITIAL_CASH  = 1000.0
-STOP_LOSS_PCT = 0.08
+STOP_LOSS_PCT = 0.06    # 从8%→6% (加了杠杆, 止损更紧)
 RSI_PERIOD    = 14
 RSI_OB        = 70.0
 RSI_OS        = 30.0
-POSITION_PCT  = 0.30
+POSITION_PCT  = 0.20    # 从30%→20% (加了杠杆, 仓位更轻)
 LOOP_SECONDS  = 300
 LOG_ROUNDS    = 12
+LEVERAGE      = 3       # 虚拟杠杆 (RSI波动大, 用3x)
 
 LOG_FILE   = os.path.expanduser(f"~/charon/bot_logs/{STRATEGY_NAME}.log")
 STATE_FILE = os.path.expanduser(f"~/charon/bot_logs/{STRATEGY_NAME}_state.json")
@@ -44,7 +45,8 @@ def calc_rsi(closes, period=14):
     rs = avg_g / avg_l
     return 100.0 - (100.0 / (1.0 + rs))
 
-state = {"cash": INITIAL_CASH, "position": None, "trades": 0, "pnl": 0.0}
+state = {"cash": INITIAL_CASH, "position": None, "trades": 0, "pnl": 0.0,
+         "daily_pnl": 0.0, "daily_date": "", "funding_collected": 0.0}
 if os.path.exists(STATE_FILE):
     try:
         state = json.load(open(STATE_FILE))
@@ -69,7 +71,13 @@ while True:
             entry = pos["entry"]
             side = pos["side"]
             qty = pos["qty"]
-            pnl = (price - entry) * qty if side == "long" else (entry - price) * qty
+            pnl = ((price - entry) * qty if side == "long" else (entry - price) * qty) * LEVERAGE
+            
+            # 日亏重置
+            today_d = datetime.now().strftime('%Y-%m-%d')
+            if state["daily_date"] != today_d:
+                state["daily_pnl"] = 0.0
+                state["daily_date"] = today_d
             
             stop_dist = entry * STOP_LOSS_PCT
             if (side == "long" and price < entry - stop_dist) or \
@@ -77,9 +85,10 @@ while True:
                 proceeds = qty * price if side == "long" else qty * (2*entry - price)
                 state["cash"] += proceeds
                 state["pnl"] += pnl
+                state["daily_pnl"] += pnl
                 state["trades"] += 1
                 state["position"] = None
-                log.info(f"[SL] {side.upper()} @ ${price:.4f} PnL=${pnl:.2f}")
+                log.info(f"[SL] {side.upper()} @ ${price:.4f} PnL=${pnl:.2f} (x{LEVERAGE})")
                 continue
             
             # Exit when RSI reverts
@@ -87,9 +96,10 @@ while True:
                 proceeds = qty * price if side == "long" else qty * (2*entry - price)
                 state["cash"] += proceeds
                 state["pnl"] += pnl
+                state["daily_pnl"] += pnl
                 state["trades"] += 1
                 state["position"] = None
-                log.info(f"[EXIT] {side.upper()} RSI回归={rsi:.1f} @ ${price:.4f} PnL=${pnl:.2f}")
+                log.info(f"[EXIT] {side.upper()} RSI回归={rsi:.1f} @ ${price:.4f} PnL=${pnl:.2f} (x{LEVERAGE})")
                 continue
         
         if not in_pos:
@@ -112,12 +122,29 @@ while True:
                 equity += p["qty"] * price
             else:
                 equity += p["qty"] * (2 * p["entry"] - price)
+            # 合约杠杆浮动盈亏
+            upnl = ((price - p["entry"]) * p["qty"] if p["side"] == "long" else (p["entry"] - price) * p["qty"]) * (LEVERAGE - 1)
+            equity += upnl
+        
+        # 资金费率采集
+        pos_ref = state.get("position")
+        if pos_ref and pos_ref["side"] == "short":
+            try:
+                fr = exchange.fetch_funding_rate(SYMBOL.replace("/","") + ":USDT")
+                rate = float(fr["info"]["lastFundingRate"])
+                if rate > 0:
+                    margin_used = pos_ref["qty"] * pos_ref["entry"] / LEVERAGE
+                    fee = margin_used * rate * (LOOP_SECONDS / 28800)
+                    state["funding_collected"] = state.get("funding_collected", 0) + fee
+            except: pass
         
         loop += 1
         if loop % LOG_ROUNDS == 0:
-            c, t, p = state["cash"], state["trades"], state["pnl"]
+            c, t, p, fc = state["cash"], state["trades"], state["pnl"], state.get("funding_collected", 0)
+            dpnl = state.get("daily_pnl", 0)
             pos_side = state.get("position", {}).get("side", "无")
-            log.info(f"[STATUS] 权益=${equity:.2f} 现金=${c:.2f} 持仓={pos_side} RSI={rsi:.1f} 交易={t} PnL=${p:.2f}")
+            log.info(f"[STATUS] 权益=${equity:.2f} 现金=${c:.2f} 持仓={pos_side} RSI={rsi:.1f} "
+                     f"交易={t} PnL=${p:.2f} 日亏=${dpnl:.2f} 费率=${fc:.4f} (x{LEVERAGE})")
         
         json.dump(state, open(STATE_FILE, "w"))
         time.sleep(LOOP_SECONDS)

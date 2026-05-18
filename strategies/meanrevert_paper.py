@@ -10,9 +10,11 @@ TIMEFRAME = '1h'
 BB_PERIOD = 20
 BB_STD = 2.0
 RSI_PERIOD = 14
-RSI_OVERSOLD = 30
-RSI_OVERBOUGHT = 70
-POSITION_PCT = 0.3  # 单笔30%仓位
+RSI_OVERSOLD = 20       # 熊市收紧: 从30→20 (减少逆势做多)
+RSI_OVERBOUGHT = 55     # 熊市放宽: 从70→55 (增加做空频率)
+POSITION_PCT = 0.3      # 单笔30%仓位
+LEVERAGE = 5            # 虚拟杠杆 (合约模式)
+DAILY_LOSS_LIMIT = 5.0  # 日亏$5熔断(模拟$50本金的10%)
 
 import ccxt, json, time, os
 from datetime import datetime
@@ -31,7 +33,8 @@ def log(msg):
 ex = ccxt.binance()
 ex.load_markets()
 
-state = {'cash': INITIAL_CAPITAL, 'position': None, 'trades': 0, 'pnl': 0.0}
+state = {'cash': INITIAL_CAPITAL, 'position': None, 'trades': 0, 'pnl': 0.0,
+         'daily_pnl': 0.0, 'daily_date': '', 'funding_collected': 0.0}
 if os.path.exists(STATE_FILE):
     try:
         state = json.load(open(STATE_FILE))
@@ -94,15 +97,29 @@ while True:
             entry = pos['entry']
             side = pos['side']
             qty = pos['qty']
-            pnl = (price - entry) * qty if side == 'long' else (entry - price) * qty
+            pnl = ((price - entry) * qty if side == 'long' else (entry - price) * qty) * LEVERAGE
             
-            # ATR止损
-            sl_dist = atr * 1.5
+            # 日亏重置
+            today = datetime.now().strftime('%Y-%m-%d')
+            if state['daily_date'] != today:
+                state['daily_pnl'] = 0.0
+                state['daily_date'] = today
+            
+            # 日亏熔断
+            if state['daily_pnl'] <= -DAILY_LOSS_LIMIT:
+                dpnl = state['daily_pnl']
+                log(f'[DAILY_LOSS] 日亏${dpnl:.2f} 熔断, 跳过本轮')
+                time.sleep(300)
+                continue
+            
+            # ATR止损 (合约版更紧: 1.0x instead of 1.5x)
+            sl_dist = atr * 1.0
             if (side == 'long' and price < entry - sl_dist) or (side == 'short' and price > entry + sl_dist):
-                state['cash'] += qty * price if side == 'long' else qty * (2*entry - price)
+                state['cash'] += (qty * price if side == 'long' else qty * (2*entry - price))
                 state['pnl'] += pnl
+                state['daily_pnl'] += pnl
                 state['trades'] += 1
-                log(f'[SL] {SYMBOL} {side.upper()} @ {price:.2f} PnL=${pnl:.2f}')
+                log(f'[SL] {SYMBOL} {side.upper()} @ {price:.2f} PnL=${pnl:.2f} (x{LEVERAGE})')
                 state['position'] = None
                 continue
             
@@ -110,8 +127,9 @@ while True:
             if (side == 'long' and price >= ma) or (side == 'short' and price <= ma):
                 state['cash'] += qty * price if side == 'long' else qty * (2*entry - price)
                 state['pnl'] += pnl
+                state['daily_pnl'] += pnl
                 state['trades'] += 1
-                log(f'[TP] {SYMBOL} {side.upper()} @ {price:.2f} (回归均线) PnL=${pnl:.2f}')
+                log(f'[TP] {SYMBOL} {side.upper()} @ {price:.2f} (回归均线) PnL=${pnl:.2f} (x{LEVERAGE})')
                 state['position'] = None
                 continue
         
@@ -132,7 +150,7 @@ while True:
                 state['position'] = {'entry': price, 'qty': qty, 'side': 'short', 'time': time.time()}
                 log(f'[OPEN] SHORT {SYMBOL} {qty:.4f} @ {price:.2f} RSI={rsi:.1f} BB上轨={upper:.2f}')
         
-        # 总权益
+        # 总权益 (合约模式: 保证金+杠杆浮动)
         equity = state['cash']
         pos = state.get('position')
         if pos:
@@ -140,12 +158,31 @@ while True:
                 equity += pos['qty'] * price
             else:
                 equity += pos['qty'] * (2*pos['entry'] - price)
+            # 套用杠杆计算浮动盈亏
+            upnl = ((price - pos['entry']) * pos['qty'] if pos['side'] == 'long' else (pos['entry'] - price) * pos['qty']) * (LEVERAGE - 1)
+            equity += upnl
+        
+        # 资金费率采集
+        funding_earned = 0.0
+        if pos and pos['side'] == 'short':
+            try:
+                fr = ex.fetch_funding_rate(SYMBOL.replace('/','')+':USDT')
+                rate = float(fr['info']['lastFundingRate'])
+                if rate > 0:
+                    margin_used = pos['qty'] * pos['entry'] / LEVERAGE
+                    fee = margin_used * rate * (300 / 28800)
+                    state['funding_collected'] = state.get('funding_collected', 0) + fee
+                    funding_earned = fee
+            except: pass
         
         loop += 1
         if loop % 12 == 0:
             pos_side = state.get("position",{}).get("side","无")
-            c, t = state["cash"], state["trades"]
-            log(f'[STATUS] 权益=${equity:.2f} 现金=${c:.2f} 持仓={pos_side} RSI={rsi:.1f} 交易={t} PnL=${state["pnl"]:.2f}')
+            c, t, fc = state["cash"], state["trades"], state.get("funding_collected", 0)
+            dpnl = state.get('daily_pnl', 0)
+            log(f'[STATUS] 权益=${equity:.2f} 现金=${c:.2f} 持仓={pos_side} RSI={rsi:.1f} '
+                f'交易={t} PnL=${state["pnl"]:.2f} 日亏=${dpnl:.2f} '
+                f'费率收入=${fc:.4f} (x{LEVERAGE})')
         
         json.dump(state, open(STATE_FILE, 'w'))
         time.sleep(300)
