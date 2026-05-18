@@ -1,12 +1,12 @@
 {
-  "updated_at": "2026-05-18T21:00:05",
-  "market_assessment": "bearish: All major coins negative for 2nd consecutive check. BTC $77,637(-0.91%) still failing $78K. BCH $376.10(-9.24%) bounce weak. DOGE $0.106(-5.03%) accelerating lower. ETH $2,151(-1.96%) bounce fading. SOL $85.57(-1.35%). XRP $1.40(-1.69%). No signs of reversal — this is an established downtrend. BCH volume 108K BTC-equivalent vs 13K BTC volume = abnormal activity indicating distribution.",
+  "updated_at": "2026-05-18T21:15:00",
+  "market_assessment": "bearish confirmed: All 6 tracked coins negative. BTC $77,485(-0.97%) failing $78K again. ETH $2,148(-1.93%). BCH $376(-8.93%) massive dump from $414. DOGE $0.106(-4.74%) accelerating. SOL $85.39(-1.27%). XRP $1.39(-1.95%). BCH 24h range $348-$414=$66 swing(17.5%) = extreme volatility. BCH volume 109K vs BTC 13K BTC-equivalent = abnormal capital rotation. Bounce from $348 low fading at $376. No reversal structure. Short-covering bounce not trend change.",
   "regime": "bearish",
   "risk_control": {
     "daily_loss_limit": 5.0,
     "max_positions": 0,
-    "max_drawdown_per_position": 5.0,
-    "urgent_advice": "⚠️⚠️⚠️ 前次'平仓'执行失败！ETH LONG 0.916@$2,149.79(150x,清算$2,145.11=距$5.10)和BCH LONG 3.193@$376.22(75x,清算$373.22=距$2.57)仍OPEN！清算间隔不到0.7%波动。必须立即用Bybit API市价平仓: ETH用POST /v5/order/create {symbol:ETHUSDT,side:Sell,orderType:Market,qty:0.916,positionIdx:1,reduceOnly:true} ；BCH用POST /v5/order/create {symbol:BCHUSDT,side:Sell,orderType:Market,qty:3.193,positionIdx:1,reduceOnly:true}。平仓后max_positions=0禁止任何新实盘开仓。必须验证返回的orderStatus=='Filled'。"
+    "max_drawdown_per_position": 3.0,
+    "urgent_advice": "🚨🚨🚨 BCH LONG 2.381@$375.81(75x, liq $372.85=距离$2.97)仍然OPEN！上次平仓指令只部分执行(3.193→2.381)。BCH今日振幅17.5%($348-$414)，距离清算仅0.79%波动。必须立即全量平仓: POST /v5/order/create {symbol:BCHUSDT, side:Sell, orderType:Market, qty:2.381, positionIdx:1, reduceOnly:true}。验证orderStatus=='Filled'。平仓后max_positions=0禁止任何新实盘开仓。另外rsi_meanrev_paper DOGE LONG 1869.86@$0.10696仍未平仓(DOGE -4.74%)，必须执行close操作。"
   },
   "strategies": {
     "meanrevert_paper": {
@@ -15,27 +15,27 @@
       "position_pct": 0.0,
       "action": "wait",
       "stop_loss_atr": 1.5,
-      "reason": "No position, $1003.40 cash. Bearish market no reversal signals. Stay in wait mode."
+      "reason": "$1,003.40 cash, no position. Bearish regime confirmed. No mean reversion longs in downtrend. Stay in wait mode."
     },
     "rsi_meanrev_paper": {
-      "rsi_oversold": 25,
-      "rsi_overbought": 70,
+      "rsi_oversold": 20,
+      "rsi_overbought": 75,
       "position_pct": 0.0,
       "action": "close",
-      "stop_loss_pct": 0.03,
-      "reason": "DOGE LONG 1869.86 @ $0.10696 still open. DOGE -5.03% weakest major coin. Close immediately — no reason to hold a long in a coin leading downside."
+      "stop_loss_pct": 0.02,
+      "reason": "DOGE LONG 1869.86@$0.10696 STILL OPEN - previous close command was ignored/skipped. DOGE -4.74% weakest major coin. No reason to hold long. Close NOW."
     },
     "combo31_paper": {
       "leverage": 1.5,
       "position_pct": 0.15,
       "action": "hold",
-      "reason": "BTC SHORT @ $77,138(current $77,637, -0.64% unrealized loss), ETH SHORT @ $2,120(current $2,151, -1.46% loss), SOL SHORT @ $85.06(current $85.57, -0.6% loss). All three shorts slightly underwater from bounce but direction is correct in bearish regime. BTC bounce capped at $78K rejection confirms downtrend. Hold."
+      "reason": "BTC SHORT@$77,138(cur $77,485, -0.45% unrealized loss bounced from $76,583 low). ETH SHORT@$2,120(cur $2,148, -1.32% loss bounced from $2,091 low). SOL SHORT@$85.06(cur $85.39, -0.39% loss). All shorts slightly underwater from bounce but direction is correct. BTC failed at $78K rejection=resistance holds. Bounce is short-covering, not reversal. Hold positions. Consider adding on retest of $2,170 ETH / $78,500 BTC if bearish rejection."
     },
     "futures_paper": {
       "leverage": 1,
       "position_pct": 0.25,
       "action": "hold",
-      "reason": "ETH SHORT @ $2,112.31, 0.947 ETH, margin $400. Currently ~$36.60 unrealized loss as ETH bounced $2,091→$2,151. Direction correct. Bounce is short-covering, not trend reversal. Hold and consider adding if ETH retests $2,170-2,180."
+      "reason": "ETH SHORT@$2,112.31, 0.947 ETH, margin $400, ~$33 unrealized loss($2,148-$2,112). ETH bounced $2,091->$2,148(+2.7%) from intraday low. Bounce shows short-covering characteristics. Downtrend intact. Hold. Consider adding at $2,170-2,180 if bearish candle rejection confirmed."
     }
   },
   "spot_execution": {
@@ -48,9 +48,9 @@
     "direction": "short",
     "leverage": 2,
     "margin_usdt": 0,
-    "stop_loss_price": 385.0,
+    "stop_loss_price": 390.0,
     "take_profit_price": 340.0,
-    "reason": "BCH bounce $348→$376(+8%) losing momentum. BCH volume 108K vs BTC 13K = unusual. Short-covering bounce. Wait for bearish candle rejection at $378-382 zone. If BCH reclaims $385+ with volume, cancel short plan. Stop tight at $385, TP $340."
+    "reason": "BCH short setup pending: Bounce $348->$376(+8%) losing momentum. Volume 109K abnormal - distribution pattern. Wait for bearish candle rejection at $378-382 zone with wick. Entry trigger: bearish engulfing or long-wick rejection at $378+. Stop $390, TP $340. Do NOT short before rejection confirmation - false breakout risk."
   },
-  "version": 10
+  "version": 11
 }
