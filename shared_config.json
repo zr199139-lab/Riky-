@@ -1,11 +1,11 @@
 {
   "retro_parameters": {
     "DEFAULT_STOP_PCT": 2.0,
-    "MAX_LEVERAGE": 20,
-    "MARGIN_PER_TRADE": 30,
-    "MAX_DAILY_TRADES": 5,
+    "MAX_LEVERAGE": 5,
+    "MARGIN_PER_TRADE": 10,
+    "MAX_DAILY_TRADES": 3,
     "direction_focus": "SHORT",
-    "other": "\u5f3a\u5236\u8bbe\u7f6e\u6b62\u635f\uff0c\u6bcf\u7b14\u4ea4\u6613\u5fc5\u987b\u5e26\u6b62\u635f\uff1b\u964d\u4f4e\u6760\u6746\u81f320\u500d\u4ee5\u4e0b\uff1b\u6bcf\u65e5\u4ea4\u6613\u4e0a\u96505\u7b14\uff0c\u8d85\u8fc7\u5219\u9501\u4ed3"
+    "other": "\u5f3a\u5236\u8bbe\u7f6e\u6b62\u635f\u5355\uff0c\u5355\u7b14\u4e8f\u635f\u4e0d\u8d85\u8fc7\u672c\u91d1\u76842%\uff1b\u964d\u4f4e\u6760\u6746\u81f35\u500d\u4ee5\u4e0b\uff1b\u6bcf\u65e5\u4ea4\u6613\u4e0a\u96503\u7b14\uff0c\u8d85\u8fc7\u5219\u51bb\u7ed3\u8d26\u6237"
   },
-  "last_retro": "2026-05-19T00:01:30.221949"
+  "last_retro": "2026-05-19T04:00:28.077707"
 }
