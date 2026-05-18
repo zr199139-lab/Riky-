@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
-币安5月交易记录 → evolver memory 格式化管道
-读取币安真实成交记录，写入 ./memory/ 供 evolver GEP分析
+币安5月交易记录 → evolver memory 格式化管道 v2
+分段查询(按天)+只扫描有成交的币种
 """
-import os, json, time, sys, traceback
-from datetime import datetime, timezone
+import os, json, time, sys
+from datetime import datetime, timezone, timedelta
 from pathlib import Path
 
 BASE = Path('/home/admin/charon')
@@ -14,6 +14,7 @@ SECURE_DIR = Path.home() / '.hermes/mempalace/secure'
 
 sys.path.insert(0, str(SECURE_DIR))
 from decrypt_and_run import decrypt
+import ccxt
 
 def log(msg):
     t = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
@@ -22,87 +23,72 @@ def log(msg):
         f.write(f'[{t}] {msg}\n')
 
 def get_exchange():
-    """解密API凭据并连接币安"""
     creds = decrypt()
     api_key = creds.get('BINANCE_API_KEY', '')
     api_secret = creds.get('BINANCE_API_SECRET', '')
-    
     if not api_key or not api_secret:
-        log('[ERR] 币安API Key未找到')
+        log('[ERR] Key未找到')
         return None
-    
-    import ccxt
     ex = ccxt.binance({
-        'apiKey': api_key,
-        'secret': api_secret,
-        'enableRateLimit': True,
-        'rateLimit': 2000,
-        'options': {'defaultType': 'spot'}
+        'apiKey': api_key, 'secret': api_secret,
+        'enableRateLimit': True, 'options': {'defaultType': 'spot'}
     })
+    ex.load_markets()
     return ex
 
-def fetch_all_trades(ex, start_ts, end_ts=None):
-    """拉取币安5月所有成交记录 - 按币种逐对查询"""
-    if end_ts is None:
-        end_ts = int(time.time() * 1000)
+def get_traded_symbols(ex):
+    """从余额中找出用户实际交易过的币种"""
+    b = ex.fetch_balance()
+    # 所有有余额或有挂单的币
+    coins = set()
+    for k, v in b.get('total', {}).items():
+        if float(v) > 0:
+            coins.add(k)
+    for k, v in b.get('free', {}).items():
+        if float(v) > 0:
+            coins.add(k)
     
-    # 先获取所有交易对
-    ex.load_markets()
-    symbols = list(ex.symbols)
-    # 只取USDT交易对
-    usdt_symbols = [s for s in symbols if s.endswith('/USDT')]
-    log(f'USDT交易对: {len(usdt_symbols)}个')
+    symbols = []
+    for c in coins:
+        if c != 'USDT':
+            symbols.append(f'{c}/USDT')
     
+    # 再加一些可能交易过但已清仓的主流币
+    extra = ['BTC/USDT', 'ETH/USDT', 'SOL/USDT', 'DOGE/USDT', 'XRP/USDT',
+             'BNB/USDT', 'ADA/USDT', 'AVAX/USDT', 'LINK/USDT', 'DOT/USDT']
+    for e in extra:
+        if e.replace('/USDT','') not in coins:
+            symbols.append(e)
+    
+    log(f'要查询的交易对: {len(symbols)}个 (含余额币+主流币)')
+    return list(set(symbols))
+
+def fetch_trades_by_day(ex, symbol, start_day, end_day):
+    """按天分段查询，避免-1127错误(最大24h)"""
     all_trades = []
-    limit = 1000
-    
-    for sym in usdt_symbols:
+    current = start_day
+    while current < end_day:
+        next_day = current + timedelta(days=1)
+        start_ms = int(current.timestamp() * 1000)
+        end_ms = int(next_day.timestamp() * 1000)
         try:
-            trades = ex.fetch_my_trades(sym, limit=limit, params={
-                'startTime': start_ts, 'endTime': end_ts
+            trades = ex.fetch_my_trades(symbol, limit=1000, params={
+                'startTime': start_ms, 'endTime': end_ms
             })
             if trades:
-                for t in trades:
-                    t['account'] = 'spot'
                 all_trades.extend(trades)
-                time.sleep(0.3)  # 限速
         except Exception as e:
             msg = str(e)
-            if 'no trade' in msg.lower() or 'not found' in msg.lower():
-                continue  # 无交易记录的正常跳过
-            log(f'  {sym}: {msg[:60]}')
-            time.sleep(1)
-    
-    # 也查合约
-    try:
-        ex_fut = ccxt.binance({
-            'apiKey': ex.apiKey,
-            'secret': ex.secret,
-            'enableRateLimit': True,
-            'options': {'defaultType': 'future'}
-        })
-        ex_fut.load_markets()
-        for sym in usdt_symbols:
-            try:
-                raw = sym.replace('/USDT', '') + '/USDT:USDT'
-                trades = ex_fut.fetch_my_trades(raw, limit=limit, params={
-                    'startTime': start_ts, 'endTime': end_ts
-                })
-                if trades:
-                    for t in trades:
-                        t['account'] = 'futures'
-                    all_trades.extend(trades)
-                    time.sleep(0.3)
-            except:
-                time.sleep(0.3)
-    except Exception as e:
-        log(f'合约查询跳过: {e}')
-    
-    log(f'总交易记录: {len(all_trades)}笔')
+            if 'no trade' in msg.lower() or 'not found' in str(msg):
+                pass  # 正常跳过
+            else:
+                log(f'  {symbol}@{current.date()}: {msg[:50]}')
+        time.sleep(0.25)
+        current = next_day
     return all_trades
 
-def process_trades(trades):
-    """分析成交记录，提炼evolver需要的信号"""
+def analyze_trades(trades):
+    """分析交易记录"""
     if not trades:
         return None
     
@@ -110,7 +96,6 @@ def process_trades(trades):
     by_symbol = {}
     total_fees = 0.0
     total_volume = 0.0
-    total_pnl_approx = 0.0  # 近似PnL (buy-sell价差)
     
     for t in trades:
         sym = t.get('symbol', 'unknown')
@@ -119,147 +104,145 @@ def process_trades(trades):
         side = t.get('side', '')
         
         if sym not in by_symbol:
-            by_symbol[sym] = {'buys': 0, 'sells': 0, 'buy_vol': 0.0, 'sell_vol': 0.0, 
-                              'fees': 0.0, 'trades': 0, 'pnl': 0.0}
-        
-        by_symbol[sym]['fees'] += fee_cost
+            by_symbol[sym] = {'trades': 0, 'fees': 0.0, 'buy_vol': 0, 'sell_vol': 0,
+                             'buys': 0, 'sells': 0, 'total_vol': 0}
         by_symbol[sym]['trades'] += 1
-        by_symbol[sym][f'{side}_vol'] += cost
-        if side == 'buy': by_symbol[sym]['buys'] += 1
-        else: by_symbol[sym]['sells'] += 1
+        by_symbol[sym]['fees'] += fee_cost
+        by_symbol[sym]['total_vol'] += cost
+        if side == 'buy': 
+            by_symbol[sym]['buys'] += 1
+            by_symbol[sym]['buy_vol'] += cost
+        else:
+            by_symbol[sym]['sells'] += 1
+            by_symbol[sym]['sell_vol'] += cost
         
         total_fees += fee_cost
         total_volume += cost
     
-    # 生成报告
-    report = {
+    # 找问题币种
+    high_fee = sorted([(s, d) for s, d in by_symbol.items() if d['fees'] > 1],
+                     key=lambda x: x[1]['fees'], reverse=True)
+    most_traded = sorted(by_symbol.items(), key=lambda x: x[1]['trades'], reverse=True)[:10]
+    
+    return {
         'timestamp': datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ'),
-        'source': 'binance_may_trades',
-        'period': '2026-05-01 to 2026-05-18',
         'total_trades': len(trades),
-        'total_volume': round(total_volume, 2),
         'total_fees': round(total_fees, 2),
-        'symbols_traded': len(by_symbol),
-        'by_symbol': by_symbol,
-        'summary': {
-            'total_buys': sum(s['buys'] for s in by_symbol.values()),
-            'total_sells': sum(s['sells'] for s in by_symbol.values()),
-            'net_volume': round(sum(s['buy_vol'] - s['sell_vol'] for s in by_symbol.values()), 2),
-        }
+        'total_volume': round(total_volume, 2),
+        'symbols': len(by_symbol),
+        'high_fee_symbols': [{'symbol': s, 'fees': round(d['fees'], 2), 'trades': d['trades']} for s,d in high_fee],
+        'most_traded': [{'symbol': s, 'trades': d['trades'], 'fees': round(d['fees'], 2)} for s,d in most_traded],
     }
-    
-    # 找亏钱的币
-    losers = []
-    high_fee = []
-    for sym, data in by_symbol.items():
-        if data['fees'] > 5:
-            high_fee.append({'symbol': sym, 'fees': round(data['fees'], 2), 'trades': data['trades']})
-    
-    report['alerts'] = {
-        'high_fee_symbols': high_fee,
-        'most_traded': sorted(by_symbol.items(), key=lambda x: x[1]['trades'], reverse=True)[:5]
-    }
-    
-    return report
 
-def write_to_memory(report):
-    """写入./memory/供evolver扫描"""
-    # 1. 主报告
-    json.dump(report, open(MEMORY / 'binance_may_trades.json', 'w'), indent=2)
-    log(f'主报告写入: {len(report.get("by_symbol",{}))}币种')
+def write_evolver_memory(analysis):
+    """写入./memory/供evolver分析"""
+    if not analysis:
+        return
     
-    # 2. 写入运行时日志 (evolver扫描这个找信号)
-    log_file = MEMORY / 'logs' / f'binance_trades_{datetime.now().strftime("%Y%m%d_%H%M%S")}.log'
-    with open(log_file, 'w') as f:
-        f.write(f'[binance_trade_loader] 5月交易数据\n')
-        f.write(f'总成交: {report["total_trades"]}笔\n')
-        f.write(f'总成交量: ${report["total_volume"]:.0f}\n')
-        f.write(f'总手续费: ${report["total_fees"]:.2f}\n')
-        f.write(f'交易币种: {report["symbols_traded"]}个\n\n')
+    # 1. 性能报告
+    perf = {
+        'timestamp': analysis['timestamp'],
+        'source': 'binance_may_real_trades',
+        'period': '2026-05-01 ~ 2026-05-18',
+        'total_trades': analysis['total_trades'],
+        'total_fees': analysis['total_fees'],
+        'total_volume': analysis['total_volume'],
+        'symbols_traded': analysis['symbols'],
+        'high_fee_symbols': analysis['high_fee_symbols']
+    }
+    json.dump(perf, open(MEMORY / 'binance_may_trades.json', 'w'), indent=2)
+    log(f'[1] 报告写入: {analysis["total_trades"]}笔, 手续费${analysis["total_fees"]}')
+    
+    # 2. 运行时日志 (evolver扫描找信号)
+    with open(MEMORY / 'logs' / f'binance_may_{datetime.now().strftime("%Y%m%d_%H%M%S")}.log', 'w') as f:
+        f.write(f'=== 币安5月真实交易数据 ===\n')
+        f.write(f'总交易: {analysis["total_trades"]}笔\n')
+        f.write(f'总成交量: ${analysis["total_volume"]:.0f}\n')
+        f.write(f'总手续费: ${analysis["total_fees"]:.2f}\n')
+        f.write(f'交易币种: {analysis["symbols"]}个\n\n')
         
-        f.write('各币种费用:\n')
-        for sym, data in report.get('by_symbol',{}).items():
-            if data['fees'] > 1:
-                f.write(f'  [high_fee] {sym}: 手续费=${data["fees"]:.2f} 交易={data["trades"]}笔\n')
+        if analysis['total_fees'] > 50:
+            f.write(f'[error] 手续费过高: ${analysis["total_fees"]}\n')
+        if analysis['total_trades'] > 100:
+            f.write(f'[warning] 过度交易: {analysis["total_trades"]}笔\n')
         
-        f.write('\n异常信号:\n')
-        for a in report.get('alerts',{}).get('high_fee_symbols',[]):
-            f.write(f'  [error] high_fee: {a["symbol"]} ${a["fees"]} 手续费\n')
+        f.write('\n高费用币种:\n')
+        for s in analysis['high_fee_symbols']:
+            if s['fees'] > 2:
+                f.write(f'  [high_cost] {s["symbol"]}: 手续费${s["fees"]} 交易{s["trades"]}笔\n')
         
-        if report['total_fees'] > 50:
-            f.write(f'  [error] total_fees_excessive: 总手续费${report["total_fees"]:.2f}\n')
-        
-        if report['symbols_traded'] > 10:
-            f.write(f'  [warning] too_many_symbols: {report["symbols_traded"]}个币种分散资金\n')
+        f.write('\n最活跃币种:\n')
+        for s in analysis['most_traded']:
+            f.write(f'  {s["symbol"]}: {s["trades"]}笔, 手续费${s["fees"]}\n')
+    log(f'[2] 日志已写入')
     
-    log(f'日志写入: {log_file}')
-    
-    # 3. 写入信号 (evolver用signals_match匹配)
-    signals = []
-    for a in report.get('alerts',{}).get('high_fee_symbols',[]):
-        signals.append({"signal": "error", "source": f"binance_{a['symbol']}", 
-                       "value": a['fees'], "desc": f"{a['symbol']}手续费${a['fees']}"})
-    
-    if report['total_fees'] > 50:
-        signals.append({"signal": "high_cost", "source": "binance_may", 
-                       "value": report['total_fees'], "desc": f"总手续费${report['total_fees']}"})
-    
-    if report['total_trades'] > 100:
-        signals.append({"signal": "overtrading", "source": "binance_may",
-                       "value": report['total_trades'], "desc": f"高频交易{report['total_trades']}笔"})
-    
-    # 合并到现有信号
+    # 3. 信号
     sig_file = MEMORY / 'signals' / 'current.json'
     existing = []
     if sig_file.exists():
         try: existing = json.load(open(sig_file))
         except: pass
+    existing = [s for s in existing if not s.get('source', '').startswith('binance_')]
     
-    # 保留非binance信号，追加新信号
-    existing = [s for s in existing if not s.get('source','').startswith('binance_')]
+    signals = []
+    if analysis['total_fees'] > 50:
+        signals.append({'signal': 'error', 'source': 'binance_high_fees',
+                       'value': analysis['total_fees'], 'desc': f'5月总手续费${analysis["total_fees"]}'})
+    for s in analysis['high_fee_symbols'][:3]:
+        signals.append({'signal': 'inefficient', 'source': f'binance_{s["symbol"]}',
+                       'value': s['fees'], 'desc': f'{s["symbol"]}手续费${s["fees"]}'})
+    if analysis['total_trades'] > 200:
+        signals.append({'signal': 'overtrading', 'source': 'binance_overtrade',
+                       'value': analysis['total_trades'], 'desc': f'{analysis["total_trades"]}笔交易'})
+    
     existing.extend(signals)
     json.dump(existing, open(sig_file, 'w'), indent=2)
-    log(f'信号写入: {len(signals)}条交易信号')
+    log(f'[3] 信号写入: {len(signals)}条')
+    
+    # 4. 更新策略性能表
+    perf_file = MEMORY / 'strategy_performance.json'
+    sp = {'strategies': {}}
+    if perf_file.exists():
+        try: sp = json.load(open(perf_file))
+        except: pass
+    
+    sp['strategies']['binance_may_2026'] = {
+        'pnl': -analysis['total_fees'],
+        'trades': analysis['total_trades'],
+        'cash': 0,
+        'fees_paid': analysis['total_fees'],
+        'has_position': False,
+        'updated_at': analysis['timestamp'],
+        'source': '币安5月真实交易'
+    }
+    json.dump(sp, open(perf_file, 'w'), indent=2)
+    log(f'[4] strategy_performance已更新')
 
 if __name__ == '__main__':
-    log('=== 币安5月交易记录加载 ===')
+    log('=== 币安5月交易加载 ===')
     
     ex = get_exchange()
-    if not ex:
-        log('[ERR] 无法连接币安')
-        sys.exit(1)
+    if not ex: sys.exit(1)
     
-    # 5月1日到现在的毫秒时间戳
-    may_1 = int(datetime(2026, 5, 1, tzinfo=timezone.utc).timestamp() * 1000)
+    symbols = get_traded_symbols(ex)
     
-    trades = fetch_all_trades(ex, may_1)
-    if not trades:
-        log('[WARN] 没有获取到5月交易记录，尝试从Bot日志读取')
-        # fallback: 读本地已有的trade_log
-        sys.exit(0)
+    # 5月1日 ~ 5月18日
+    may1 = datetime(2026, 5, 1, tzinfo=timezone.utc)
+    may18 = datetime(2026, 5, 18, tzinfo=timezone.utc)
     
-    report = process_trades(trades)
-    if report:
-        write_to_memory(report)
-        
-        # 同步更新策略性能文件
-        perf_file = MEMORY / 'strategy_performance.json'
-        existing = {'strategies': {}}
-        if perf_file.exists():
-            try: existing = json.load(open(perf_file))
-            except: pass
-        
-        existing['strategies']['binance_may_trades'] = {
-            'pnl': -report['total_fees'],  # 近似: 手续费就是确定亏损
-            'trades': report['total_trades'],
-            'cash': 0,
-            'fees_paid': report['total_fees'],
-            'has_position': False,
-            'updated_at': report['timestamp'],
-            'source': 'binance_5月真实交易',
-            'total_volume': report['total_volume']
-        }
-        json.dump(existing, open(perf_file, 'w'), indent=2)
-        log('strategy_performance已更新: 含币安5月数据')
+    all_trades = []
+    total_syms = len(symbols)
+    for i, sym in enumerate(sorted(symbols)):
+        trades = fetch_trades_by_day(ex, sym, may1, may18)
+        if trades:
+            all_trades.extend(trades)
+            log(f'  [{i+1}/{total_syms}] {sym}: {len(trades)}笔')
+        if (i+1) % 20 == 0:
+            log(f'  进度: {i+1}/{total_syms}, 已获取{len(all_trades)}笔')
+    
+    log(f'全部完成: {len(all_trades)}笔交易')
+    
+    analysis = analyze_trades(all_trades)
+    write_evolver_memory(analysis)
     
     log('=== 完成 ===')

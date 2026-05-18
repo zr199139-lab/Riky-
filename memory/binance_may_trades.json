@@ -1,0 +1,56 @@
+{
+  "timestamp": "2026-05-18T04:39:48Z",
+  "source": "binance_may_real_trades",
+  "period": "2026-05-01 ~ 2026-05-18",
+  "total_trades": 1073,
+  "total_fees": 80.87,
+  "total_volume": 46589.63,
+  "symbols_traded": 22,
+  "high_fee_symbols": [
+    {
+      "symbol": "DOGE/USDT",
+      "fees": 47.7,
+      "trades": 403
+    },
+    {
+      "symbol": "MITO/USDT",
+      "fees": 8.55,
+      "trades": 46
+    },
+    {
+      "symbol": "ETH/USDT",
+      "fees": 5.89,
+      "trades": 180
+    },
+    {
+      "symbol": "SOL/USDT",
+      "fees": 3.41,
+      "trades": 138
+    },
+    {
+      "symbol": "UNI/USDT",
+      "fees": 3.2,
+      "trades": 61
+    },
+    {
+      "symbol": "XRP/USDT",
+      "fees": 2.74,
+      "trades": 58
+    },
+    {
+      "symbol": "BTC/USDT",
+      "fees": 2.3,
+      "trades": 67
+    },
+    {
+      "symbol": "JTO/USDT",
+      "fees": 1.96,
+      "trades": 43
+    },
+    {
+      "symbol": "LDO/USDT",
+      "fees": 1.94,
+      "trades": 12
+    }
+  ]
+}
