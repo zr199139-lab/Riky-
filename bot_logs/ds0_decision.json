@@ -1,69 +1,78 @@
 {
-  "time": "2026-05-18T22:30:45",
-  "epoch": 1779114645,
+  "time": "2026-05-18T22:45:50",
+  "epoch": 1779115550,
   "analysis_summary": {
     "regime": "bearish",
-    "regime_source": "shared_config bearish confirmed + advisory bearish + price action",
-    "btc_price": 76611.38,
-    "btc_24h_change": -1.864,
+    "regime_source": "shared_config bearish + price action accelerating + advisory bearish",
+    "btc_price": 76412.56,
+    "btc_24h_change": -2.088,
     "total_pnl_live": -12.97,
     "live_positions": 0,
-    "live_futures_wallet": 16.74,
+    "live_futures_wallet": 46.75,
+    "live_spot_equity": 276.45,
     "paper_positions": "2 of 4 active (combo31:3 shorts, futures_paper:1 short)",
-    "paper_pnl_combo31": 361.66,
-    "paper_pnl_futures": -5.39,
+    "paper_pnl_combo31": 745.0,
+    "paper_pnl_futures": 3.12,
     "paper_pnl_meanrev": 3.40,
     "paper_pnl_rsi": -4.49,
     "notable_events": [
-      "BCH -9.85% daily crash - largest mover - bounce completely failed at $377, now $371.70",
-      "DOGE -5.87% continues as leading weakness indicator",
-      "BTC approaching $76K critical support - break would trigger cascade",
-      "No reversal candle on any of top 6 coins - pure bear momentum",
-      "Weekend volume elevated - distribution pattern continuing through Sunday"
+      "BTC dropped $199 in 15min from $76,611 to $76,412 - accelerating toward $76K support",
+      "BCH -10.78% daily crash deepening - bounce at $377 fully failed, now $367.40 accelerating toward $348 floor",
+      "DOGE -6.14% continues as leading weakness indicator across all tracked pairs",
+      "No reversal candle on any pair - pure bear momentum with no buying support at any level",
+      "BCH $360 breakdown level only 2% away - would trigger paper short cascade",
+      "Weekend distribution pattern continuing into Sunday night - no weekend bounce as typical",
+      "BTC $76K break would confirm cascade to $75K - currently only 0.54% away"
     ]
   },
   "decisions": [
     {
-      "decision": "TRAIL combo31 BTC short",
-      "rationale": "BTC short profit grown to +$527 (6.83% ROI). Previous trail at $77,500 too loose now that BTC is $76,611. New trail: reduce 25% at $76,800 bounce, full close at $77,200. Add 0.05x if BTC breaks $76K.",
+      "decision": "TIGHTEN combo31 BTC short trail further",
+      "rationale": "BTC dropped from $76,611 to $76,412 in 15min - short profit grew from +$527 to +$726. Previous trail at $76,800 reduce / $77,200 close now too loose. New trail: reduce 25% at $76,600 (tightened from $76,800), full close at $76,900 (tightened from $77,200). Profit protection is paramount as BTC accelerates into support.",
       "risk_level": "medium",
-      "pnl_impact_if_executed": "protects +$527 profit vs risking full pullback"
+      "pnl_impact_if_executed": "protects +$726 vs risking 100% pullback to $77,138 entry"
     },
     {
       "decision": "HOLD combo31 ETH/SOL shorts",
-      "rationale": "ETH short at breakeven improving. SOL short +$6.92 (5.41% ROI). Both tracking BTC downside. No exit signal.",
+      "rationale": "ETH short +$11 profit improving. SOL short +$8.65 (6.76% ROI). Both tracking BTC downside. No exit signal. ETH $2,091 support approaching - add 0.3x on breakdown.",
       "risk_level": "low",
       "pnl_impact_if_executed": "0 (maintaining existing positions)"
     },
     {
-      "decision": "HOLD futures_paper ETH short",
-      "rationale": "Improving from -$13.73 to -$3.73 as ETH bounce fades. Downtrend intact. Add 0.3x if $2,091 breaks.",
+      "decision": "HOLD futures_paper ETH short - now in profit",
+      "rationale": "ETH short improved from -$16.69 to +$3.12 - first time in profit. Downtrend intact. Add 0.3x if $2,091 breaks at $2,080 with $2,105 stop.",
       "risk_level": "low",
       "pnl_impact_if_executed": "0 (maintaining)"
     },
     {
-      "decision": "WAIT on meanrevert and rsi_meanrev",
-      "rationale": "Accelerating bear market - buying dips is catching knives. Keep cash.",
+      "decision": "LOWER RSI thresholds on meanrevert/rsi_meanrev",
+      "rationale": "Bearish momentum accelerating - lowered meanrevert oversold from 20 to 18, rsi_meanrev oversold from 15 to 13. Catastrophic risk to longs in this environment. Wait mode correct - no change to action.",
+      "risk_level": "none",
+      "pnl_impact_if_executed": "0 - precautionary parameter adjustment only"
+    },
+    {
+      "decision": "NO live positions - dry powder preserved",
+      "rationale": "Futures wallet $46.75 + spot $276.45 = $323.20 total live equity. Bearish cascade environment means any long is catastrophic risk. Futures wallet too small for meaningful short position. Stay flat.",
       "risk_level": "none",
       "pnl_impact_if_executed": "0"
     },
     {
-      "decision": "NO live positions",
-      "rationale": "Futures wallet only $16.74. $276 spot equity should be preserved. Bearish regime with potential cascade means any long has catastrophic risk.",
-      "risk_level": "none",
-      "pnl_impact_if_executed": "0"
-    },
-    {
-      "decision": "UPDATE BCH short setup triggers",
-      "rationale": "BCH crash bounce completely failed at $377, now $371.70. Entry triggers tightened: (1) BTC breaks $76K + BCH below $375, or (2) BCH breaks $360 with volume. Leverage reduced to 1x due to 17.5% daily range.",
+      "decision": "UPDATE BCH short trigger - $360 breakdown imminent",
+      "rationale": "BCH at $367.40, only 2% from $360 breakdown trigger. Stop tightened from $385 to $382. Target $348 initial (today's low), $335 if BTC cascades. First trigger (BTC $76K + BCH below $375) is partially met - BCH is below $375 but BTC still above $76K.",
       "risk_level": "low",
       "pnl_impact_if_executed": "0 (trigger not activated yet)"
     },
     {
-      "decision": "FLAG: -$12.97 live PnL investigation needed",
-      "rationale": "Total live PnL is -$12.97. Likely from prior trade losses + fees. Need to track source in next cycle. No action required now as all positions are closed.",
+      "decision": "COMBO31 add trigger set for BTC $76K break",
+      "rationale": "If BTC breaks $76,200, add 0.05x at $75,800 target $74,000 with $76,200 stop. Stop-loss at $76,200 ensures max loss capped at +$400 against the position of +$726 profit, net profit floor of +$326 after reversal.",
+      "risk_level": "medium",
+      "pnl_impact_if_executed": "scales into strengthening bear trend with protected downside via tight stop"
+    },
+    {
+      "decision": "MONITOR: weekend distribution pattern anomalous",
+      "rationale": "No weekend bounce on any pair - unusual for crypto. Typically weekends have low-volume bounces. This is distribution without accumulation. Suggests large players are distributing into any bid. Potential gap-down at Monday open.",
       "risk_level": "info",
-      "pnl_impact_if_executed": "diagnostic only"
+      "pnl_impact_if_executed": "watching for Monday open gap risk"
     }
   ]
 }
