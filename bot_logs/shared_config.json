@@ -1,0 +1,50 @@
+{
+  "updated_at": "2026-05-18T19:45:25",
+  "market_assessment": "bearish: broad selloff across all majors (BTC -1.46%, ETH -2.67%, SOL -2.13%, DOGE -5.58%, BCH -13.59% crash). BCH drop suggests whale liquidation cascade. No reversal signals. Downward momentum intact.",
+  "regime": "bearish",
+  "risk_control": {
+    "daily_loss_limit": 5.0,
+    "max_positions": 2,
+    "max_drawdown_per_position": 8.0,
+    "urgent_advice": "熊市确认，BCH暴跌13.6%标志流动性危机。全面平多，仅保留做空仓位。降低杠杆控制回撤，勿追空已暴跌品种"
+  },
+  "strategies": {
+    "meanrevert_paper": {
+      "rsi_oversold": 20,
+      "rsi_overbought": 65,
+      "position_pct": 0.0,
+      "action": "close"
+    },
+    "rsi_meanrev_paper": {
+      "rsi_oversold": 20,
+      "rsi_overbought": 65,
+      "position_pct": 0.0,
+      "action": "close"
+    },
+    "combo31_paper": {
+      "leverage": 2,
+      "position_pct": 0.25,
+      "action": "hold"
+    },
+    "futures_paper": {
+      "leverage": 3,
+      "position_pct": 0.2,
+      "action": "hold"
+    }
+  },
+  "spot_execution": {
+    "active": false,
+    "orders": []
+  },
+  "contract": {
+    "active": false,
+    "symbol": "ETH/USDT",
+    "direction": "short",
+    "leverage": 3,
+    "margin_usdt": 0,
+    "stop_loss_price": 2180.0,
+    "take_profit_price": 2050.0,
+    "reason": "熊市做空方向正确但纸盘已持仓亏损，实盘暂不部署避免双重风险暴露"
+  },
+  "version": 5
+}

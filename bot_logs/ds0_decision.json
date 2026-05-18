@@ -1,0 +1,52 @@
+{
+  "time": "2026-05-18T19:45:25",
+  "epoch": 1779104725.448,
+  "analysis_summary": {
+    "market": "bearish - broad selloff with BCH -13.59% crash (whale liquidation signal)",
+    "real_pnl": 0.0,
+    "paper_pnl": -10.78,
+    "total_pnl_status": "loss",
+    "btc_price": 77292.01,
+    "btc_24h_change": -1.462,
+    "key_event": "BCH crashed 13.59% - likely cascading liquidations",
+    "intel_available": false
+  },
+  "decisions": [
+    {
+      "target": "market_regime",
+      "action": "set_bearish",
+      "reason": "BTC -1.46%, all majors red, BCH -13.59%. No reversal signals."
+    },
+    {
+      "target": "meanrevert_paper",
+      "action": "close_long_eth",
+      "reason": "Bear market. ETH long +$2 small profit. Take profit before reversal. RSI oversold raised from 15→20."
+    },
+    {
+      "target": "rsi_meanrev_paper",
+      "action": "close_long_doge",
+      "reason": "DOGE -5.58%. Long position losing -$2.90. Catching falling knife. Close and wait."
+    },
+    {
+      "target": "combo31_paper",
+      "action": "hold_shorts_reduce_leverage",
+      "reason": "Direction (short) correct but entered late. Reduce leverage 3x→2x, position 0.3→0.25 to manage drawdown."
+    },
+    {
+      "target": "futures_paper",
+      "action": "hold_short_reduce_leverage",
+      "reason": "ETH short direction correct but underwater. Reduce leverage 5x→3x, position 0.3→0.2."
+    },
+    {
+      "target": "contract_real",
+      "action": "disable_deployment",
+      "reason": "Paper shorts already underwater. Adding real capital doubles risk. Wait for better entry or paper recovery."
+    },
+    {
+      "target": "risk_control",
+      "action": "add_max_drawdown_8pct",
+      "reason": "Protect against further downside. Each position max 8% drawdown before forced close."
+    }
+  ],
+  "version": 5
+}
