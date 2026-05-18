@@ -1,73 +1,69 @@
 {
-  "time": "2026-05-18T22:15:30",
-  "epoch": 1779113730.0,
+  "time": "2026-05-18T22:30:45",
+  "epoch": 1779114645,
   "analysis_summary": {
     "regime": "bearish",
-    "btc_price": 76775.35,
-    "btc_24h_change": -1.522,
-    "total_pnl": -12.97,
-    "total_pnl_status": "loss",
+    "regime_source": "shared_config bearish confirmed + advisory bearish + price action",
+    "btc_price": 76611.38,
+    "btc_24h_change": -1.864,
+    "total_pnl_live": -12.97,
     "live_positions": 0,
-    "paper_positions": 2,
-    "combo31_unrealized_pnl": 361.66,
-    "futures_paper_unrealized_pnl": -13.73,
-    "market_verdict": "bearish confirmed - all 6 coins negative. BTC $76,775 double rejection at $78K = bear flag. ETH bounce $2,091->$2,148 fully faded. BCH extreme volatility 17.5%. DOGE weakest -5.68%. No reversal structure on any pair."
+    "live_futures_wallet": 16.74,
+    "paper_positions": "2 of 4 active (combo31:3 shorts, futures_paper:1 short)",
+    "paper_pnl_combo31": 361.66,
+    "paper_pnl_futures": -5.39,
+    "paper_pnl_meanrev": 3.40,
+    "paper_pnl_rsi": -4.49,
+    "notable_events": [
+      "BCH -9.85% daily crash - largest mover - bounce completely failed at $377, now $371.70",
+      "DOGE -5.87% continues as leading weakness indicator",
+      "BTC approaching $76K critical support - break would trigger cascade",
+      "No reversal candle on any of top 6 coins - pure bear momentum",
+      "Weekend volume elevated - distribution pattern continuing through Sunday"
+    ]
   },
   "decisions": [
     {
-      "action": "regime_enforce",
-      "target": "system",
-      "detail": "Overwrite ds0_data 'sideways' label. Hard rule: when all 6 tracked coins are negative across >2% average, regime MUST be bearish. Bear flag confirmed at BTC $78K double rejection."
+      "decision": "TRAIL combo31 BTC short",
+      "rationale": "BTC short profit grown to +$527 (6.83% ROI). Previous trail at $77,500 too loose now that BTC is $76,611. New trail: reduce 25% at $76,800 bounce, full close at $77,200. Add 0.05x if BTC breaks $76K.",
+      "risk_level": "medium",
+      "pnl_impact_if_executed": "protects +$527 profit vs risking full pullback"
     },
     {
-      "action": "hold",
-      "target": "combo31_paper",
-      "reason": "3-leg combo short at +$361.66 unrealized. BTC short at +$363 profit. SOL short at +$4.66. ETH short at -$6 loss but improving as bounce fades. All 3 legs aligned with bearish regime."
+      "decision": "HOLD combo31 ETH/SOL shorts",
+      "rationale": "ETH short at breakeven improving. SOL short +$6.92 (5.41% ROI). Both tracking BTC downside. No exit signal.",
+      "risk_level": "low",
+      "pnl_impact_if_executed": "0 (maintaining existing positions)"
     },
     {
-      "action": "hold",
-      "target": "futures_paper_eth_short",
-      "reason": "ETH SHORT @ $2,112.31. Loss improving from -$16.69 to -$13.73 as ETH drops. Bounce to $2,148 fully faded. Bearish regime supports continued hold."
+      "decision": "HOLD futures_paper ETH short",
+      "rationale": "Improving from -$13.73 to -$3.73 as ETH bounce fades. Downtrend intact. Add 0.3x if $2,091 breaks.",
+      "risk_level": "low",
+      "pnl_impact_if_executed": "0 (maintaining)"
     },
     {
-      "action": "trailing_stop",
-      "target": "combo31_btc_short",
-      "detail": "If BTC bounces above $77,000, reduce 25% to lock profit. Current BTC $76,775 - not yet triggered."
+      "decision": "WAIT on meanrevert and rsi_meanrev",
+      "rationale": "Accelerating bear market - buying dips is catching knives. Keep cash.",
+      "risk_level": "none",
+      "pnl_impact_if_executed": "0"
     },
     {
-      "action": "add",
-      "target": "combo31_paper",
-      "detail": "If BTC breaks below $76,000, consider adding 0.05x at $75,800 for trend continuation entry."
+      "decision": "NO live positions",
+      "rationale": "Futures wallet only $16.74. $276 spot equity should be preserved. Bearish regime with potential cascade means any long has catastrophic risk.",
+      "risk_level": "none",
+      "pnl_impact_if_executed": "0"
     },
     {
-      "action": "no_new_live",
-      "target": "all_live_strategies",
-      "detail": "max_positions=0 maintained. No live positions until manual review. Bearish regime not suitable for new live entries without confirmation."
+      "decision": "UPDATE BCH short setup triggers",
+      "rationale": "BCH crash bounce completely failed at $377, now $371.70. Entry triggers tightened: (1) BTC breaks $76K + BCH below $375, or (2) BCH breaks $360 with volume. Leverage reduced to 1x due to 17.5% daily range.",
+      "risk_level": "low",
+      "pnl_impact_if_executed": "0 (trigger not activated yet)"
     },
     {
-      "action": "wait",
-      "target": "bch_short_setup",
-      "detail": "BCH $376 still fading from $377 bounce. Entry triggers: rejection at $378-382 or breakdown below $360. Not yet triggered."
-    },
-    {
-      "action": "wait",
-      "target": "meanrevert_paper",
-      "detail": "RSI oversold 20. position_pct 0.0. Bearish regime prevents long entry. No support structure to long against."
-    },
-    {
-      "action": "wait",
-      "target": "rsi_meanrev_paper",
-      "detail": "RSI oversold 15. position_pct 0.0. DOGE -5.68% weakest coin. Any long is catching a falling knife."
-    },
-    {
-      "action": "inactive",
-      "target": "spot_execution",
-      "detail": "No spot buys in bear market. USDT $30.01 preserved."
-    },
-    {
-      "action": "inactive",
-      "target": "contract_live",
-      "detail": "BCH short setup not triggered. margin_usdt=0. Leverage 2x ready but waiting for confirmation candle."
+      "decision": "FLAG: -$12.97 live PnL investigation needed",
+      "rationale": "Total live PnL is -$12.97. Likely from prior trade losses + fees. Need to track source in next cycle. No action required now as all positions are closed.",
+      "risk_level": "info",
+      "pnl_impact_if_executed": "diagnostic only"
     }
   ]
 }
