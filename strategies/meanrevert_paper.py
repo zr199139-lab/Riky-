@@ -20,6 +20,9 @@ TAKER_FEE = 0.0004      # Binance合约taker费率 0.04%
 import ccxt, json, time, os
 from datetime import datetime
 import statistics
+import sys
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from shared_config import load_strategy_params, get_risk_limits
 
 LOG_FILE = os.path.expanduser('~/charon/bot_logs/meanrevert_paper.log')
 STATE_FILE = os.path.expanduser('~/charon/bot_logs/meanrevert_paper_state.json')
@@ -83,6 +86,17 @@ log(f'资金: ${INITIAL_CAPITAL}, 币种: {SYMBOL}, 周期: {TIMEFRAME}')
 loop = 0
 while True:
     try:
+        # 热加载GPT参数
+        gp = load_strategy_params('meanrevert_paper')
+        if gp:
+            RSI_OVERSOLD = gp.get('rsi_oversold', RSI_OVERSOLD)
+            RSI_OVERBOUGHT = gp.get('rsi_overbought', RSI_OVERBOUGHT)
+            POSITION_PCT = gp.get('position_pct', POSITION_PCT)
+            hl_atr = gp.get('stop_loss_atr', 1.5)
+            if gp.get('active') == False:
+                log('[GPT] 策略暂停指令, 跳过本轮')
+                time.sleep(300); continue
+        
         klines = fetch_klines(SYMBOL, 100)
         if not klines: continue
         price = klines[-1][4]
@@ -113,8 +127,8 @@ while True:
                 time.sleep(300)
                 continue
             
-            # ATR止损 (合约版更紧: 1.0x instead of 1.5x)
-            sl_dist = atr * 1.0
+            # ATR止损 (从热配置读取)
+            sl_dist = atr * hl_atr
             if (side == 'long' and price < entry - sl_dist) or (side == 'short' and price > entry + sl_dist):
                 # 手续费
                 fee = qty * price * TAKER_FEE

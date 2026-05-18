@@ -12,6 +12,9 @@
 """
 import os, json, time, logging, numpy as np, ccxt
 from datetime import datetime
+import sys
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from shared_config import load_strategy_params, get_risk_limits
 
 # ── 配置 ──
 MODE = 1          # 1=MACD空头, 2=波动率偏空, 3=死猫反弹
@@ -148,6 +151,17 @@ log.info(f"=== 合约虚拟盘 启动 | 本金=${INITIAL_CAPITAL} x{LEVERAGE} | 
 loop = 0
 while True:
     try:
+        # 热加载GPT参数
+        gp = load_strategy_params('futures_paper')
+        if gp:
+            gp_lev = gp.get('leverage')
+            if gp_lev: LEVERAGE = int(gp_lev)
+            gp_pct = gp.get('position_pct')
+            if gp_pct: INITIAL_CASH_FRAC = float(gp_pct)
+            if gp.get('active') == False:
+                log.info(f'[GPT] 策略暂停指令, 跳过本轮')
+                time.sleep(300); continue
+        
         today = datetime.now().strftime('%Y-%m-%d')
         # 日亏重置
         if state['daily_date'] != today:

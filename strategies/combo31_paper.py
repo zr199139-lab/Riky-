@@ -7,6 +7,9 @@ Backtest: Sharpe 1.99, Annualized 31.7%, 0 liquidation
 """
 import os, json, time, logging, numpy as np, ccxt
 from datetime import datetime
+import sys
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from shared_config import load_strategy_params, get_risk_limits
 
 STRATEGY_NAME = "combo31_paper"
 SYMBOLS      = ["BTC/USDT", "ETH/USDT", "SOL/USDT"]

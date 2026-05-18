@@ -9,6 +9,9 @@ Backtest: Sharpe 2.04, 87% win rate, 90d +$30.37
 """
 import os, json, time, logging, numpy as np, ccxt
 from datetime import datetime
+import sys
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from shared_config import load_strategy_params, get_risk_limits
 
 STRATEGY_NAME = "rsi_meanrev_paper"
 SYMBOL        = "DOGE/USDT"
@@ -59,6 +62,21 @@ log.info(f"资金=${INITIAL_CASH}, RSI阈值={RSI_OS}/{RSI_OB}, 止损={STOP_LOS
 loop = 0
 while True:
     try:
+        # 热加载GPT参数
+        gp = load_strategy_params('rsi_meanrev_paper')
+        if gp:
+            gp_rsi_os = gp.get('rsi_oversold')
+            if gp_rsi_os: RSI_OS = float(gp_rsi_os)
+            gp_rsi_ob = gp.get('rsi_overbought')
+            if gp_rsi_ob: RSI_OB = float(gp_rsi_ob)
+            gp_pct = gp.get('position_pct')
+            if gp_pct: POSITION_PCT = float(gp_pct)
+            gp_sl = gp.get('stop_loss_pct')
+            if gp_sl: STOP_LOSS_PCT = float(gp_sl)
+            if gp.get('active') == False:
+                log.info(f'[GPT] 策略暂停指令, 跳过本轮')
+                time.sleep(300); continue
+        
         klines = exchange.fetch_ohlcv(SYMBOL, TIMEFRAME, limit=100)
         if not klines: continue
         price = klines[-1][4]
