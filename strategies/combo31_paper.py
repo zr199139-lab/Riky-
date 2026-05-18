@@ -17,6 +17,7 @@ STOP_LOSS    = 0.08
 POSITION_PCT = 0.20
 LOOP_SECONDS = 300
 LOG_ROUNDS   = 12
+TAKER_FEE    = 0.0004  # 0.04% Binance合约taker
 
 LOG_FILE   = os.path.expanduser(f"~/charon/bot_logs/{STRATEGY_NAME}.log")
 STATE_FILE = os.path.expanduser(f"~/charon/bot_logs/{STRATEGY_NAME}_state.json")
@@ -95,7 +96,9 @@ while True:
                 
                 if (side == "long" and price < entry - stop_dist) or \
                    (side == "short" and price > entry + stop_dist):
-                    state["cash"] += pos["margin"] + pnl / LEVERAGE
+                    fee = qty * price * TAKER_FEE
+                    state["fees_paid"] = state.get("fees_paid", 0) + fee
+                    state["cash"] += pos["margin"] + pnl / LEVERAGE - fee
                     state["pnl"] += pnl
                     state["trades"] += 1
                     del state["positions"][sym]
@@ -104,11 +107,13 @@ while True:
                 
                 # 趋势反转平仓
                 if (side == "long" and signal < -0.5) or (side == "short" and signal > 0.5):
-                    state["cash"] += pos["margin"] + pnl / LEVERAGE
+                    fee = qty * price * TAKER_FEE
+                    state["fees_paid"] = state.get("fees_paid", 0) + fee
+                    state["cash"] += pos["margin"] + pnl / LEVERAGE - fee
                     state["pnl"] += pnl
                     state["trades"] += 1
                     del state["positions"][sym]
-                    log.info(f"[REVERSE] {sym} {side.upper()} 趋势反转 ${price:.2f} PnL=${pnl:.2f}")
+                    log.info(f"[REVERSE] {sym} {side.upper()} 趋势反转 ${price:.2f} PnL=${pnl:.2f} 手续费=${fee:.4f}")
                     continue
                 
                 # 分批止盈: ATR×1平50%, ATR×2平剩下50%
@@ -120,18 +125,22 @@ while True:
                    (side == "short" and price < entry * (1 - tp1_pct)):
                     if pos.get("tp1_done", False):
                         # 第二批止盈
-                        state["cash"] += pos["margin"] + pnl / LEVERAGE
+                        fee = qty * price * TAKER_FEE
+                        state["fees_paid"] = state.get("fees_paid", 0) + fee
+                        state["cash"] += pos["margin"] + pnl / LEVERAGE - fee
                         state["pnl"] += pnl
                         state["trades"] += 1
                         del state["positions"][sym]
-                        log.info(f"[TP2] {sym} {side.upper()} ${price:.2f} PnL=${pnl:.2f} 全平")
+                        log.info(f"[TP2] {sym} {side.upper()} ${price:.2f} PnL=${pnl:.2f} 手续费=${fee:.4f} 全平")
                         continue
                     else:
                         # 第一批: 平50%, 留50%
                         half_qty = qty / 2
                         half_margin = pos["margin"] / 2
                         pnl_half = (price - entry) * half_qty * LEVERAGE if side == "long" else (entry - price) * half_qty * LEVERAGE
-                        state["cash"] += half_margin + pnl_half / LEVERAGE
+                        fee = half_qty * price * TAKER_FEE
+                        state["fees_paid"] = state.get("fees_paid", 0) + fee
+                        state["cash"] += half_margin + pnl_half / LEVERAGE - fee
                         state["pnl"] += pnl_half
                         state["trades"] += 1
                         pos["qty"] = half_qty
@@ -145,10 +154,12 @@ while True:
                 margin = state["cash"] * POSITION_PCT
                 qty = margin * LEVERAGE / price
                 side = "long" if signal > 0 else "short"
-                state["cash"] -= margin
+                fee = qty * price * TAKER_FEE
+                state["fees_paid"] = state.get("fees_paid", 0) + fee
+                state["cash"] -= margin + fee
                 state["positions"][sym] = {"entry": price, "qty": qty, "side": side, 
                     "margin": margin, "time": time.time()}
-                log.info(f"[OPEN] {sym} {side.upper()} {qty:.4f}@${price:.2f} margin=${margin:.2f}x{LEVERAGE}")
+                log.info(f"[OPEN] {sym} {side.upper()} {qty:.4f}@${price:.2f} margin=${margin:.2f}x{LEVERAGE} 手续费=${fee:.4f}")
         
         # 计算总权益
         equity = state["cash"]

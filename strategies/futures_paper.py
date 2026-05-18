@@ -22,6 +22,7 @@ LEVERAGE = 5       # 虚拟杠杆 3-5x
 MAX_POSITIONS = 1   # $50本金最多1仓
 DAILY_LOSS_LIMIT = 5.0  # 日亏$5停机(按$50本金的10%)
 INITIAL_CASH_FRAC = 0.4  # 每仓最多40%本金
+TAKER_FEE = 0.0004  # Binance合约taker 0.04%
 
 LOG_FILE = os.path.expanduser('~/charon/bot_logs/futures_paper.log')
 STATE_FILE = os.path.expanduser('~/charon/bot_logs/futures_paper_state.json')
@@ -37,7 +38,7 @@ log = logging.getLogger('futures_paper')
 ex = ccxt.binance({'enableRateLimit': True})
 
 state = {'cash': INITIAL_CAPITAL, 'position': None, 'trades': 0, 'pnl': 0.0,
-         'daily_pnl': 0.0, 'daily_date': '', 'funding_collected': 0.0}
+         'daily_pnl': 0.0, 'daily_date': '', 'funding_collected': 0.0, 'fees_paid': 0.0}
 if os.path.exists(STATE_FILE):
     try: state = json.load(open(STATE_FILE))
     except: pass
@@ -195,38 +196,44 @@ while True:
                     stop_price = entry + stop_dist
                     if price >= stop_price:
                         # 平仓
+                        fee = qty * price * TAKER_FEE
+                        state['fees_paid'] = state.get('fees_paid', 0) + fee
                         margin_return = pos['margin'] + pnl
-                        state['cash'] += margin_return
+                        state['cash'] += margin_return - fee
                         state['pnl'] += pnl
                         state['daily_pnl'] += pnl
                         state['trades'] += 1
                         state['funding_collected'] += pos.get('funding_earned', 0)
-                        log.info(f"[SL] {sym} SHORT @${price:.2f} (止损) PnL=${pnl:.2f} 累计PnL=${state['pnl']:.2f}")
+                        log.info(f"[SL] {sym} SHORT @${price:.2f} (止损) PnL=${pnl:.2f} 手续费=${fee:.4f}")
                         state['position'] = None
                         continue
                     
                     # 止盈: ATR×2.0
                     tp_price = entry - m['atr'] * 2.0
                     if price <= tp_price:
+                        fee = qty * price * TAKER_FEE
+                        state['fees_paid'] = state.get('fees_paid', 0) + fee
                         margin_return = pos['margin'] + pnl
-                        state['cash'] += margin_return
+                        state['cash'] += margin_return - fee
                         state['pnl'] += pnl
                         state['daily_pnl'] += pnl
                         state['trades'] += 1
                         state['funding_collected'] += pos.get('funding_earned', 0)
-                        log.info(f"[TP] {sym} SHORT @${price:.2f} PnL=${pnl:.2f} 累计PnL=${state['pnl']:.2f}")
+                        log.info(f"[TP] {sym} SHORT @${price:.2f} PnL=${pnl:.2f} 手续费=${fee:.4f}")
                         state['position'] = None
                         continue
                     
                     # 信号反转平仓
                     if MODE == 1 and sig == 1:
+                        fee = qty * price * TAKER_FEE
+                        state['fees_paid'] = state.get('fees_paid', 0) + fee
                         margin_return = pos['margin'] + pnl
-                        state['cash'] += margin_return
+                        state['cash'] += margin_return - fee
                         state['pnl'] += pnl
                         state['daily_pnl'] += pnl
                         state['trades'] += 1
                         state['funding_collected'] += pos.get('funding_earned', 0)
-                        log.info(f"[REVERSE] {sym} SHORT @${price:.2f} MACD金叉 PnL=${pnl:.2f}")
+                        log.info(f"[REVERSE] {sym} SHORT @${price:.2f} MACD金叉 PnL=${pnl:.2f} 手续费=${fee:.4f}")
                         state['position'] = None
                         continue
                 else:
@@ -257,7 +264,9 @@ while True:
                 # 费率收益估算 (每8h结算一次, 按当前费率)
                 funding_8h = margin * m['funding']  # 做空收正费率
                 
-                state['cash'] -= margin
+                fee_open = qty * price * TAKER_FEE
+                state['fees_paid'] = state.get('fees_paid', 0) + fee_open
+                state['cash'] -= margin + fee_open
                 state['position'] = {
                     'symbol': sym, 'entry': price, 'qty': qty, 'margin': margin,
                     'side': 'short', 'time': time.time(), 'funding_rate': m['funding'],

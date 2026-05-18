@@ -21,7 +21,8 @@ RSI_OS        = 30.0
 POSITION_PCT  = 0.20    # 从30%→20% (加了杠杆, 仓位更轻)
 LOOP_SECONDS  = 300
 LOG_ROUNDS    = 12
-LEVERAGE      = 3       # 虚拟杠杆 (RSI波动大, 用3x)
+LEVERAGE      = 1       # 现货无杠杆
+TAKER_FEE     = 0.0004  # Binance合约taker费率 0.04%
 
 LOG_FILE   = os.path.expanduser(f"~/charon/bot_logs/{STRATEGY_NAME}.log")
 STATE_FILE = os.path.expanduser(f"~/charon/bot_logs/{STRATEGY_NAME}_state.json")
@@ -46,7 +47,7 @@ def calc_rsi(closes, period=14):
     return 100.0 - (100.0 / (1.0 + rs))
 
 state = {"cash": INITIAL_CASH, "position": None, "trades": 0, "pnl": 0.0,
-         "daily_pnl": 0.0, "daily_date": "", "funding_collected": 0.0}
+         "daily_pnl": 0.0, "daily_date": "", "funding_collected": 0.0, "fees_paid": 0.0}
 if os.path.exists(STATE_FILE):
     try:
         state = json.load(open(STATE_FILE))
@@ -83,37 +84,44 @@ while True:
             if (side == "long" and price < entry - stop_dist) or \
                (side == "short" and price > entry + stop_dist):
                 proceeds = qty * price if side == "long" else qty * (2*entry - price)
-                state["cash"] += proceeds
-                state["pnl"] += pnl
-                state["daily_pnl"] += pnl
+                fee = qty * price * TAKER_FEE
+                state["fees_paid"] = state.get("fees_paid", 0) + fee
+                state["cash"] += proceeds - fee
+                state["pnl"] += pnl - fee
+                state["daily_pnl"] += pnl - fee
                 state["trades"] += 1
                 state["position"] = None
-                log.info(f"[SL] {side.upper()} @ ${price:.4f} PnL=${pnl:.2f} (x{LEVERAGE})")
+                log.info(f"[SL] {side.upper()} @ ${price:.4f} PnL=${pnl:.2f} 手续费=${fee:.4f} (x{LEVERAGE})")
                 continue
             
             # Exit when RSI reverts
             if (side == "long" and rsi > 50) or (side == "short" and rsi < 50):
                 proceeds = qty * price if side == "long" else qty * (2*entry - price)
-                state["cash"] += proceeds
-                state["pnl"] += pnl
-                state["daily_pnl"] += pnl
+                fee = qty * price * TAKER_FEE
+                state["fees_paid"] = state.get("fees_paid", 0) + fee
+                state["cash"] += proceeds - fee
+                state["pnl"] += pnl - fee
+                state["daily_pnl"] += pnl - fee
                 state["trades"] += 1
                 state["position"] = None
-                log.info(f"[EXIT] {side.upper()} RSI回归={rsi:.1f} @ ${price:.4f} PnL=${pnl:.2f} (x{LEVERAGE})")
+                log.info(f"[EXIT] {side.upper()} RSI回归={rsi:.1f} @ ${price:.4f} PnL=${pnl:.2f} 手续费=${fee:.4f} (x{LEVERAGE})")
                 continue
         
         if not in_pos:
             capital = state["cash"] * POSITION_PCT
             qty = capital / price
+            fee_open = capital * TAKER_FEE
             
             if rsi < RSI_OS:
-                state["cash"] -= capital
+                state["fees_paid"] = state.get("fees_paid", 0) + fee_open
+                state["cash"] -= capital + fee_open
                 state["position"] = {"entry": price, "qty": qty, "side": "long", "time": time.time()}
-                log.info(f"[OPEN] LONG {qty:.2f} @ ${price:.4f} RSI={rsi:.1f}")
+                log.info(f"[OPEN] LONG {qty:.2f} @ ${price:.4f} RSI={rsi:.1f} 手续费=${fee_open:.4f}")
             elif rsi > RSI_OB:
-                state["cash"] -= capital
+                state["fees_paid"] = state.get("fees_paid", 0) + fee_open
+                state["cash"] -= capital + fee_open
                 state["position"] = {"entry": price, "qty": qty, "side": "short", "time": time.time()}
-                log.info(f"[OPEN] SHORT {qty:.2f} @ ${price:.4f} RSI={rsi:.1f}")
+                log.info(f"[OPEN] SHORT {qty:.2f} @ ${price:.4f} RSI={rsi:.1f} 手续费=${fee_open:.4f}")
         
         equity = state["cash"]
         if state.get("position"):
@@ -122,29 +130,14 @@ while True:
                 equity += p["qty"] * price
             else:
                 equity += p["qty"] * (2 * p["entry"] - price)
-            # 合约杠杆浮动盈亏
-            upnl = ((price - p["entry"]) * p["qty"] if p["side"] == "long" else (p["entry"] - price) * p["qty"]) * (LEVERAGE - 1)
-            equity += upnl
-        
-        # 资金费率采集
-        pos_ref = state.get("position")
-        if pos_ref and pos_ref["side"] == "short":
-            try:
-                fr = exchange.fetch_funding_rate(SYMBOL.replace("/","") + ":USDT")
-                rate = float(fr["info"]["lastFundingRate"])
-                if rate > 0:
-                    margin_used = pos_ref["qty"] * pos_ref["entry"] / LEVERAGE
-                    fee = margin_used * rate * (LOOP_SECONDS / 28800)
-                    state["funding_collected"] = state.get("funding_collected", 0) + fee
-            except: pass
         
         loop += 1
         if loop % LOG_ROUNDS == 0:
-            c, t, p, fc = state["cash"], state["trades"], state["pnl"], state.get("funding_collected", 0)
+            c, t, p, fc = state["cash"], state["trades"], state["pnl"], state.get("fees_paid", 0)
             dpnl = state.get("daily_pnl", 0)
             pos_side = state.get("position", {}).get("side", "无")
             log.info(f"[STATUS] 权益=${equity:.2f} 现金=${c:.2f} 持仓={pos_side} RSI={rsi:.1f} "
-                     f"交易={t} PnL=${p:.2f} 日亏=${dpnl:.2f} 费率=${fc:.4f} (x{LEVERAGE})")
+                     f"交易={t} PnL=${p:.2f} 日亏=${dpnl:.2f} 手续费=${fc:.4f}")
         
         json.dump(state, open(STATE_FILE, "w"))
         time.sleep(LOOP_SECONDS)
