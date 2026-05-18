@@ -1,0 +1,76 @@
+{
+  "timestamp": "2026-05-18T04:16:35Z",
+  "strategies": {
+    "combo31_paper": {
+      "pnl": 0.0,
+      "trades": 0,
+      "cash": 512.0,
+      "fees_paid": 0,
+      "has_position": true,
+      "updated_at": "2026-05-18T04:16:35Z"
+    }
+,
+    "futures_paper": {
+      "pnl": 0.0,
+      "trades": 0,
+      "cash": 600.0,
+      "fees_paid": 0,
+      "has_position": true,
+      "updated_at": "2026-05-18T04:16:35Z"
+    }
+,
+    "macd_rsi_paper": {
+      "pnl": 0,
+      "trades": 0,
+      "cash": 1000.0,
+      "fees_paid": 0,
+      "has_position": false,
+      "updated_at": "2026-05-18T04:16:35Z"
+    }
+,
+    "macd_trend_paper": {
+      "pnl": 0,
+      "trades": 0,
+      "cash": 1000.0,
+      "fees_paid": 0,
+      "has_position": false,
+      "updated_at": "2026-05-18T04:16:35Z"
+    }
+,
+    "meanrevert_paper": {
+      "pnl": 0.0,
+      "trades": 0,
+      "cash": 700.0,
+      "fees_paid": 0,
+      "has_position": true,
+      "updated_at": "2026-05-18T04:16:35Z"
+    }
+,
+    "pairs_paper": {
+      "pnl": 0.0,
+      "trades": 0,
+      "cash": 1000.0,
+      "fees_paid": 0,
+      "has_position": false,
+      "updated_at": "2026-05-18T04:16:35Z"
+    }
+,
+    "rsi_meanrev_paper": {
+      "pnl": 0.0,
+      "trades": 0,
+      "cash": 800.0,
+      "fees_paid": 0,
+      "has_position": true,
+      "updated_at": "2026-05-18T04:16:35Z"
+    }
+,
+    "turtle_paper": {
+      "pnl": 0.0,
+      "trades": 0,
+      "cash": 1000.0,
+      "fees_paid": 0,
+      "has_position": false,
+      "updated_at": "2026-05-18T04:16:35Z"
+    }
+  }
+}

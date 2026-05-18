@@ -1,0 +1,17 @@
+[
+{"signal": "idle", "source": "combo31_paper", "value": 0, "desc": "0交易0盈亏"}
+,
+{"signal": "idle", "source": "futures_paper", "value": 0, "desc": "0交易0盈亏"}
+,
+{"signal": "idle", "source": "macd_rsi_paper", "value": 0, "desc": "0交易0盈亏"}
+,
+{"signal": "idle", "source": "macd_trend_paper", "value": 0, "desc": "0交易0盈亏"}
+,
+{"signal": "idle", "source": "meanrevert_paper", "value": 0, "desc": "0交易0盈亏"}
+,
+{"signal": "idle", "source": "pairs_paper", "value": 0, "desc": "0交易0盈亏"}
+,
+{"signal": "idle", "source": "rsi_meanrev_paper", "value": 0, "desc": "0交易0盈亏"}
+,
+{"signal": "idle", "source": "turtle_paper", "value": 0, "desc": "0交易0盈亏"}
+]

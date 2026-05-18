@@ -1,0 +1,105 @@
+{
+  "last_run": {
+    "run_id": "run_1779077760028",
+    "created_at": "2026-05-18T04:16:00.042Z",
+    "parent_event_id": null,
+    "selected_gene_id": null,
+    "selected_capsule_id": null,
+    "selector": {
+      "selected": null,
+      "reason": [
+        "no matching gene found; new gene may be required",
+        "signals: memory_missing, user_missing, session_logs_missing",
+        "drift_intensity: 0.577",
+        "selection_path: none"
+      ],
+      "alternatives": [],
+      "selectionPath": "none",
+      "memoryUsed": false
+    },
+    "signals": [
+      "memory_missing",
+      "user_missing",
+      "session_logs_missing"
+    ],
+    "mutation": {
+      "type": "Mutation",
+      "id": "mut_1779077759996",
+      "category": "innovate",
+      "trigger_signals": [
+        "memory_missing",
+        "user_missing",
+        "session_logs_missing"
+      ],
+      "target": "behavior:protocol",
+      "expected_effect": "explore new strategy combinations to escape local optimum",
+      "risk_level": "medium"
+    },
+    "mutation_id": "mut_1779077759996",
+    "personality_state": {
+      "type": "PersonalityState",
+      "rigor": 0.7,
+      "creativity": 0.35,
+      "verbosity": 0.25,
+      "risk_tolerance": 0.4,
+      "obedience": 0.85
+    },
+    "personality_key": "rigor=0.7|creativity=0.3|verbosity=0.3|risk_tolerance=0.4|obedience=0.9",
+    "personality_known": false,
+    "personality_mutations": [],
+    "drift": false,
+    "selected_by": "selector",
+    "source_type": "generated",
+    "reused_asset_id": null,
+    "reused_source_node": null,
+    "reused_chain_id": null,
+    "baseline_untracked": [
+      "assets/gep/candidates.jsonl",
+      "assets/gep/capsules.json",
+      "assets/gep/events.jsonl",
+      "assets/gep/failed_capsules.json",
+      "assets/gep/genes.json",
+      "assets/gep/genes.jsonl",
+      "memory/atp-autobuyer-ledger.json",
+      "memory/evolution/evolution_solidify_state.json",
+      "memory/evolution/evolution_state.json",
+      "memory/evolution/memory_graph.jsonl",
+      "memory/evolution/memory_graph_state.json",
+      "memory/evolution/personality_state.json",
+      "memory/evolver_update_check.json",
+      "memory/signals/current.json",
+      "memory/strategy_performance.json",
+      "scripts/evolution_bridge.py",
+      "scripts/write_memory.sh"
+    ],
+    "baseline_git_head": "472317f7258e40d37e6500b684d47563cf52db2a",
+    "blast_radius_estimate": {
+      "files": 12,
+      "lines": 960
+    },
+    "strategy_policy": {
+      "name": "balanced",
+      "label": "Balanced",
+      "description": "Normal operation. Steady growth with stability.",
+      "forceInnovate": false,
+      "cautiousExecution": false,
+      "highRiskGene": false,
+      "repairStreak": 0,
+      "failureStreak": 0,
+      "blastRadiusMaxFiles": 12,
+      "directives": [
+        "Base strategy: Balanced (Normal operation. Steady growth with stability.)",
+        "Target max files for this cycle: 12."
+      ]
+    },
+    "active_task_id": null,
+    "active_task_title": null,
+    "worker_assignment_id": null,
+    "worker_pending": false,
+    "commitment_deadline": null,
+    "applied_lessons": [],
+    "hub_lessons": [],
+    "cycleId": "0003",
+    "initial_user_prompt": null
+  }
+}
