@@ -1,13 +1,13 @@
 {
   "last_action": {
-    "action_id": "act_1779077760004_665b100b",
+    "action_id": "act_1779079219519_45069f11",
     "signal_key": "memory_missing|session_logs_missing|user_missing",
     "signals": [
       "memory_missing",
       "user_missing",
       "session_logs_missing"
     ],
-    "mutation_id": "mut_1779077759996",
+    "mutation_id": "mut_1779079219511",
     "mutation_category": "innovate",
     "mutation_risk_level": "medium",
     "personality_key": "rigor=0.7|creativity=0.3|verbosity=0.3|risk_tolerance=0.4|obedience=0.9",
@@ -21,10 +21,10 @@
     },
     "gene_id": null,
     "gene_category": null,
-    "hypothesis_id": "hyp_1779077760001_6c636842",
+    "hypothesis_id": "hyp_1779079219515_4cfc1e4d",
     "capsules_used": [],
     "had_error": false,
-    "created_at": "2026-05-18T04:16:00.004Z",
+    "created_at": "2026-05-18T04:40:19.519Z",
     "outcome_recorded": false,
     "baseline_observed": {
       "agent": "main",
@@ -32,12 +32,12 @@
       "drift_enabled": false,
       "review_mode": false,
       "dry_run": false,
-      "system_health": "Uptime: 424.0h | Node: v23.11.1 | Agent RSS: 122.0MB | Disk: 41% (40.3G free) | Node Processes: 6 | Integrations: Nominal",
+      "system_health": "Uptime: 424.4h | Node: v22.22.2 | Agent RSS: 113.1MB | Disk: 41% (40.3G free) | Node Processes: 1 | Integrations: Nominal",
       "mood": "Mood: Unknown",
-      "scan_ms": 68,
+      "scan_ms": 48,
       "memory_size_bytes": 0,
       "recent_error_count": 0,
-      "node": "v23.11.1",
+      "node": "v22.22.2",
       "platform": "linux",
       "cwd": "/home/admin/charon",
       "evidence": {
