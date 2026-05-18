@@ -50,14 +50,17 @@ def get_price(ex, symbol):
     except:
         return 0
 
-def get_asset_balance(ex, symbol):
-    """获取某币种现货余额"""
+def has_position(ex, symbol, min_value=1.0):
+    """检查是否有实际持仓(>1U)"""
     try:
         coin = symbol.split('/')[0]
         b = ex.fetch_balance()
-        return float(b.get('free', {}).get(coin, 0))
+        qty = float(b.get('free', {}).get(coin, 0))
+        t = ex.fetch_ticker(symbol)
+        value = qty * t['last']
+        return value > min_value
     except:
-        return 0
+        return False
 
 def place_limit_order(ex, symbol, side, qty, price):
     """挂限价单"""
@@ -191,7 +194,7 @@ if __name__ == '__main__':
         if sym in existing:
             log(f'  {sym}: 已有买单,跳过')
             continue
-        if get_asset_balance(ex, sym) > 0:
+        if has_position(ex, sym):
             log(f'  {sym}: 已持仓,跳过')
             continue
         
