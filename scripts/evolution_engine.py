@@ -121,7 +121,7 @@ def gpt_evolve(data):
 - 熊市做空赚钱, 做多亏钱
 - 主流币(BTC/ETH/SOL/DOGE)有流动性, 小币一买就套
 
-|你的任务: 分析所有数据, 为4个虚拟盘和$250现货执行器生成最优参数。
+|你的任务: 分析所有数据, 为4个虚拟盘、$250现货执行器和$50合约执行器生成最优参数。
 不要保守。有信号就干, 没信号就等。
 要赌就赌大的, 但不赌就是最稳的赚。
 美国时间周一到周五波动最大。
@@ -134,7 +134,17 @@ $250现货执行器说明:
 - 空仓时可挂2-3个限价单等触发
 - 持仓后等反弹到目标出, 然后重新挂单
 
-输出JSON格式(新增spot_execution段):
+$50合约执行器说明(新增):
+- 资金: $50 USDT 币安合约账户
+- 方向: 熊市做空为主(历史验证), 牛市做多
+- 杠杆: 5-10x, $50×10x=$500名义
+- 单笔止损: -$3(本金的6%)
+- 日亏上限: -$10(本金的20%)
+- 止盈: +$5-15/单
+- 只做ETH/BTC/SOL, 不做小币
+- 不扛单, 到止损就砍
+
+输出JSON格式:
 {{{{"market": "bullish/bearish/sideways(一句话理由)",
   "strategies": {{{{
     "meanrevert_paper": {{{{"active": true/false,"rsi_oversold": 整数,"rsi_overbought": 整数,"position_pct": 浮点数,"action": "hold/open/close"}}}},
@@ -151,12 +161,24 @@ $250现货执行器说明:
       {{{{ "symbol": "SOL/USDT", "buy_below": 价格, "sell_at": 价格, "allocation": USDT数额 }}}}
     ]
   }}}},
+  "contract": {{{{
+    "active": true/false,
+    "symbol": "币种/USDT",
+    "direction": "long/short/none",
+    "leverage": 整数5-10,
+    "entry_type": "market/limit",
+    "entry_price": 入场价格限价时用,
+    "stop_loss_price": 止损价,
+    "take_profit_price": 止盈价,
+    "margin_usdt": 保证金数额(最大50),
+    "reason": "一句话决策理由"
+  }}}},
   "risk": {{{{
     "daily_loss_limit": 浮点数,
     "max_open_positions": 整数,
     "advice": "一句话建议"
-  }}}}
-}}}}
+    }}}}
+}}
 """
     try:
         r = requests.post(
@@ -199,6 +221,7 @@ def apply_decision(decision):
         },
         'strategies': decision.get('strategies', {}),
         'spot_execution': decision.get('spot_execution', {}),
+        'contract': decision.get('contract', {}),
         'version': 3
     }
     json.dump(config, open(LOGS / 'shared_config.json', 'w'), indent=2)
