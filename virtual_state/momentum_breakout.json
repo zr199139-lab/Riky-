@@ -1,0 +1,17 @@
+{
+  "id": "momentum_breakout",
+  "capital": 1000.0,
+  "positions": {},
+  "trades": [],
+  "equity_curve": [
+    {
+      "time": 1779099668.690779,
+      "datetime": "05-18 10:21",
+      "equity": 1000.0,
+      "capital": 1000.0,
+      "positions": 0
+    }
+  ],
+  "last_check": 1779099666.8363268,
+  "updated": "2026-05-18T10:21:08.690815+00:00"
+}
