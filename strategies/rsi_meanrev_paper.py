@@ -92,6 +92,19 @@ while True:
             qty = pos["qty"]
             pnl = ((price - entry) * qty if side == "long" else (entry - price) * qty) * LEVERAGE
             
+            # ======== 强制平仓 (GPT指令) ========
+            if gp and gp.get('action') == 'close':
+                proceeds = qty * price if side == "long" else qty * (2*entry - price)
+                fee = qty * price * TAKER_FEE
+                state["fees_paid"] = state.get("fees_paid", 0) + fee
+                state["cash"] += proceeds - fee
+                state["pnl"] += pnl - fee
+                state["daily_pnl"] += pnl - fee
+                state["trades"] += 1
+                log.info(f"[FORCE_CLOSE] {side.upper()} @ ${price:.4f} PnL=${pnl:.2f} 手续费=${fee:.4f}")
+                state["position"] = None
+                continue
+            
             # 日亏重置
             today_d = datetime.now().strftime('%Y-%m-%d')
             if state["daily_date"] != today_d:

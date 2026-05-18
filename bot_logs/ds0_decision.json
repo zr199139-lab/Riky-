@@ -1,52 +1,58 @@
 {
-  "time": "2026-05-18T19:45:25",
-  "epoch": 1779104725.448,
+  "time": "2026-05-18T20:00:15",
+  "epoch": 1779105615.632,
   "analysis_summary": {
-    "market": "bearish - broad selloff with BCH -13.59% crash (whale liquidation signal)",
+    "market": "bearish - BCH -13.81% crash (whale liquidation cascade), all majors red 1-6%",
     "real_pnl": 0.0,
     "paper_pnl": -10.78,
     "total_pnl_status": "loss",
-    "btc_price": 77292.01,
-    "btc_24h_change": -1.462,
-    "key_event": "BCH crashed 13.59% - likely cascading liquidations",
+    "btc_price": 77293.5,
+    "btc_24h_change": -1.437,
+    "key_event": "BCH CRASH -13.81% - cascading liquidations, potential contagion to other alts",
+    "critical_bug_found": "Paper strategies ignored 'action: close' command - code lacks FORCE_CLOSE handler. Patched both meanrevert_paper.py and rsi_meanrev_paper.py to support forced close via config.",
     "intel_available": false
   },
   "decisions": [
     {
       "target": "market_regime",
       "action": "set_bearish",
-      "reason": "BTC -1.46%, all majors red, BCH -13.59%. No reversal signals."
+      "reason": "BTC -1.44%, all majors red, BCH -13.81% crash confirms bear market. No reversal signals anywhere."
+    },
+    {
+      "target": "critical_bug_fix",
+      "action": "add_force_close_to_strategies",
+      "reason": "Previous 'close' commands ignored by paper engine. meanrevert_paper.py and rsi_meanrev_paper.py had no code to read 'action' field. Both patched with FORCE_CLOSE handler."
     },
     {
       "target": "meanrevert_paper",
-      "action": "close_long_eth",
-      "reason": "Bear market. ETH long +$2 small profit. Take profit before reversal. RSI oversold raised from 15→20."
+      "action": "force_close",
+      "reason": "ETH long in bear market. Entry 2120.18, current 2134.3 (slight profit +$2). Close before reversal wipes out gains. FORCE_CLOSE now works via code patch."
     },
     {
       "target": "rsi_meanrev_paper",
-      "action": "close_long_doge",
-      "reason": "DOGE -5.58%. Long position losing -$2.90. Catching falling knife. Close and wait."
+      "action": "force_close",
+      "reason": "DOGE long crashed -5.78%. Entry 0.10696, current 0.10509 (loss -$3.50). Catching falling knife. FORCE_CLOSE now works via code patch."
     },
     {
       "target": "combo31_paper",
-      "action": "hold_shorts_reduce_leverage",
-      "reason": "Direction (short) correct but entered late. Reduce leverage 3x→2x, position 0.3→0.25 to manage drawdown."
+      "action": "hold_shorts_reduce_size",
+      "reason": "Direction (short) correct for bear market. BTC short underwater -$2, ETH short -$5.39, SOL short +$0.53. Reduce leverage 2x→1.5x, position 0.25→0.15 to limit drawdown on bad entries."
     },
     {
       "target": "futures_paper",
-      "action": "hold_short_reduce_leverage",
-      "reason": "ETH short direction correct but underwater. Reduce leverage 5x→3x, position 0.3→0.2."
+      "action": "hold_short_reduce_leverage_add_stop",
+      "reason": "ETH short entry 2112.31, current 2134.3 (unrealized loss -$22). Direction correct but early. Reduce from 3x→2x, position 0.2→0.15. Stop loss already set at 2180 (2.1% above)."
     },
     {
       "target": "contract_real",
       "action": "disable_deployment",
-      "reason": "Paper shorts already underwater. Adding real capital doubles risk. Wait for better entry or paper recovery."
+      "reason": "Paper shorts already -$22 underwater on ETH. Real capital only $45 futures wallet + $30 spot USDT = too small. Wait for paper recovery and better entry."
     },
     {
       "target": "risk_control",
-      "action": "add_max_drawdown_8pct",
-      "reason": "Protect against further downside. Each position max 8% drawdown before forced close."
+      "action": "tighten_limits",
+      "reason": "Daily loss limit 5.0→3.0. Max drawdown per position 8%→5%. Total -$10.78 loss demands tighter risk parameters."
     }
   ],
-  "version": 5
+  "version": 6
 }

@@ -1,34 +1,36 @@
 {
-  "updated_at": "2026-05-18T19:45:25",
-  "market_assessment": "bearish: broad selloff across all majors (BTC -1.46%, ETH -2.67%, SOL -2.13%, DOGE -5.58%, BCH -13.59% crash). BCH drop suggests whale liquidation cascade. No reversal signals. Downward momentum intact.",
+  "updated_at": "2026-05-18T20:00:15",
+  "market_assessment": "bearish: BCH crash -13.81% confirms whale liquidation cascade. All majors deep red (BTC -1.44%, ETH -2.63%, SOL -2.19%, DOGE -5.78%). No reversal signals. Previous close orders not executed by paper engine - code patched with FORCE_CLOSE support.",
   "regime": "bearish",
   "risk_control": {
-    "daily_loss_limit": 5.0,
+    "daily_loss_limit": 3.0,
     "max_positions": 2,
-    "max_drawdown_per_position": 8.0,
-    "urgent_advice": "熊市确认，BCH暴跌13.6%标志流动性危机。全面平多，仅保留做空仓位。降低杠杆控制回撤，勿追空已暴跌品种"
+    "max_drawdown_per_position": 5.0,
+    "urgent_advice": "熊市确认+BCH暴跌13.8%流动性危机。强制平掉所有多头仓位。做空仓位降低杠杆并加止损。日亏$3熔断保护本金。"
   },
   "strategies": {
     "meanrevert_paper": {
-      "rsi_oversold": 20,
-      "rsi_overbought": 65,
+      "rsi_oversold": 25,
+      "rsi_overbought": 60,
       "position_pct": 0.0,
-      "action": "close"
+      "action": "close",
+      "stop_loss_atr": 1.5
     },
     "rsi_meanrev_paper": {
-      "rsi_oversold": 20,
-      "rsi_overbought": 65,
+      "rsi_oversold": 25,
+      "rsi_overbought": 60,
       "position_pct": 0.0,
-      "action": "close"
+      "action": "close",
+      "stop_loss_pct": 0.06
     },
     "combo31_paper": {
-      "leverage": 2,
-      "position_pct": 0.25,
+      "leverage": 1.5,
+      "position_pct": 0.15,
       "action": "hold"
     },
     "futures_paper": {
-      "leverage": 3,
-      "position_pct": 0.2,
+      "leverage": 2,
+      "position_pct": 0.15,
       "action": "hold"
     }
   },
@@ -40,11 +42,11 @@
     "active": false,
     "symbol": "ETH/USDT",
     "direction": "short",
-    "leverage": 3,
+    "leverage": 2,
     "margin_usdt": 0,
     "stop_loss_price": 2180.0,
     "take_profit_price": 2050.0,
-    "reason": "熊市做空方向正确但纸盘已持仓亏损，实盘暂不部署避免双重风险暴露"
+    "reason": "熊市确认但纸盘ETH空单亏损中(+$22浮亏)，实盘暂不部署。等待纸盘空单盈利或更低点位再考虑实盘。"
   },
-  "version": 5
+  "version": 6
 }
