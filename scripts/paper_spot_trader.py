@@ -235,13 +235,15 @@ BTC: ${market['btc_price']:.0f} (24h: {market['btc_change_24h']:.2f}%)
 {movers_str}
 
 ## 交易规则
-1. 单仓保证金: {MARGIN_PER_TRADE}U
-2. 最大杠杆: {MAX_LEVERAGE}x
-3. 同时持仓上限: {MAX_POSITIONS}个
-4. 日亏${abs(DAILY_LOSS_LIMIT)}熔断
-5. 熊市只做空，牛市只做多，震荡市高抛低吸
-6. 必须设止损（2%硬止损由stop_loss守护）
-7. 趋势是你的朋友——不要逆大趋势
+1. ⚠️ 重要: 你是现货模拟盘，**只能做多（LONG）不能做空**
+2. 单仓交易额: {MARGIN_PER_TRADE}U
+3. 最大杠杆: 1x（现货无杠杆）
+4. 同时持仓上限: {MAX_POSITIONS}个
+5. 日亏${abs(DAILY_LOSS_LIMIT)}熔断
+6. 熊市应等待超跌反弹机会买入而不是做空
+7. 震荡市低吸高抛（先买后卖）
+8. 牛市直接追多
+9. 判断为熊市时选"HOLD"等待，除非出现极度超卖反弹信号才考虑"ENTER_LONG"
 
 ## 输出（纯JSON，无其他文字）
 {{
