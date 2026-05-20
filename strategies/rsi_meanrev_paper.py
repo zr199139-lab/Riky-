@@ -16,7 +16,7 @@ from shared_config import load_strategy_params, get_risk_limits, get_regime
 STRATEGY_NAME = "rsi_meanrev_paper"
 SYMBOL        = "DOGE/USDT"
 TIMEFRAME     = "1h"
-INITIAL_CASH  = 1000.0
+INITIAL_CASH  = 500.0
 STOP_LOSS_PCT = 0.06    # 从8%→6% (加了杠杆, 止损更紧)
 RSI_PERIOD    = 14
 RSI_OB        = 70.0

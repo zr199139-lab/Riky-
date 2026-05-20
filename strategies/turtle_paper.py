@@ -3,7 +3,7 @@
 海龟交易系统 · 虚拟盘
 经典趋势跟踪：20日突破入场, ATR×2止损, 10日反向突破离场
 """
-INITIAL_CAPITAL = 1000.0  # 虚拟本金
+INITIAL_CAPITAL = 500.0  # 虚拟本金
 SYMBOLS = ['BTC/USDT', 'ETH/USDT']
 TIMEFRAME = '4h'
 UNIT_RISK = 0.01  # 每单位风险1%本金
